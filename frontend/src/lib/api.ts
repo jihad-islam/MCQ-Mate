@@ -1,5 +1,5 @@
-// src/lib/api.ts
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const RAW_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = RAW_URL.endsWith('/api') ? RAW_URL : `${RAW_URL}/api`;
 
 export interface Level {
   id: number;
@@ -21,7 +21,6 @@ export interface Chapter {
 export interface Option {
   id: number;
   text: string;
-  // SECURITY: is_correct is intentionally excluded from frontend
 }
 
 export interface Question {
@@ -77,12 +76,9 @@ export async function fetchQuestionsByChapter(chapterId: number, limit?: number)
     : `${API_BASE_URL}/questions/?chapterId=${chapterId}`;
   
   const response = await fetch(url, { cache: 'no-store' });
-  
   if (!response.ok) throw new Error('Failed to fetch questions');
   
   const data = await response.json();
-  
-  // Support both paginated and non-paginated responses
   return (data && data.results) ? data.results : data;
 }
 
@@ -98,4 +94,3 @@ export async function submitExam(payload: ExamSubmitPayload): Promise<ExamResult
   if (!response.ok) throw new Error('Failed to submit exam');
   return response.json();
 }
-
