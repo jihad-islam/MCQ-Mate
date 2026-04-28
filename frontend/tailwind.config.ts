@@ -1,13 +1,13 @@
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
-const config: Config = {
+const config = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: ['class'],
+  darkMode: 'class' as const, 
   theme: {
     extend: {
       fontFamily: {
@@ -31,6 +31,7 @@ const config: Config = {
     },
   },
   plugins: [],
+  // @ts-ignore
   safelist: [
     'dark',
     'dark:bg-slate-900',
@@ -41,4 +42,4 @@ const config: Config = {
   ],
 };
 
-export default config;
+export default config as Config;
