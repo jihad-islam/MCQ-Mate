@@ -25,7 +25,6 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // Prevent accidental exit during exam
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!submitted) {
@@ -37,7 +36,6 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [submitted]);
 
-  // Strict check for persisted results on reload
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -45,10 +43,9 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
         if (savedResult) {
           setResults(JSON.parse(savedResult));
           setSubmitted(true);
-          if (onSubmitComplete) onSubmitComplete(); // Force sync with parent page
+          if (onSubmitComplete) onSubmitComplete();
         }
       } catch (e) {
-        // Silently failed to parse saved exam result
       }
     }
   }, [onSubmitComplete]);
@@ -88,7 +85,6 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
       if (onSubmitComplete) onSubmitComplete();
     } catch (err) {
       setError('Failed to submit exam. Please try again.');
-      // Console log removed for cleaner production build
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +108,6 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
     
     return (
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-8 max-w-2xl mx-auto shadow-xl transition-colors relative overflow-hidden mt-4">
-        {/* Subtle background decoration */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-violet-600/10 dark:bg-violet-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-600/10 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -162,7 +157,6 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
           </button>
 
           <div className="pt-2 flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
-            {/* FIX: Return to Home uses router.push to securely navigate */}
             <button
               onClick={() => {
                 sessionStorage.removeItem('currentExamResult');
@@ -271,32 +265,31 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
         </div>
       </div>
 
-      {/* Navigation Footer: Side-by-side strictly on all views (mobile & desktop) */}
-      <div className="flex flex-row justify-between items-center gap-2 sm:gap-4 w-full mt-6">
+      <div className="flex flex-row justify-between items-center gap-4 w-full mt-6">
         <button
           onClick={handlePrev}
           disabled={currentQuestionIndex === 0}
-          className="flex items-center justify-center gap-1 sm:gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm"
+          className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-3 px-5 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-xs sm:text-base">Previous</span>
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm sm:text-base">Previous</span>
         </button>
         
         {currentQuestionIndex === questions.length - 1 ? (
            <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex-grow bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-[0_8px_30px_rgb(5,150,105,0.2)] hover:shadow-[0_8px_30px_rgb(5,150,105,0.4)] disabled:shadow-none min-w-[120px] sm:min-w-[150px] max-w-[200px] sm:max-w-[250px]"
+            className="flex-grow sm:flex-grow-0 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-5 sm:py-4 sm:px-10 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-[0_8px_30px_rgb(5,150,105,0.2)] hover:shadow-[0_8px_30px_rgb(5,150,105,0.4)] disabled:shadow-none"
           >
-            <span className="text-xs sm:text-base">{isLoading ? 'Submitting...' : 'Submit Exam'}</span>
+            <span className="text-sm sm:text-base">{isLoading ? 'Submitting...' : 'Submit Exam'}</span>
           </button>
         ) : (
           <button
             onClick={handleNext}
-            className="flex items-center justify-center gap-1 sm:gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm"
+            className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 font-bold py-3 px-5 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl transition-all duration-200 shadow-sm"
           >
-            <span className="text-xs sm:text-base">Next</span>
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base">Next</span>
+            <ArrowRight className="w-5 h-5" />
           </button>
         )}
       </div>
