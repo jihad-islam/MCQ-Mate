@@ -1,89 +1,101 @@
-# MCQMate 🎓
-    
-> Your personalized, randomized, and optimized Multiple-Choice Question (MCQ) practice partner.
+# 🎓 MCQMate
 
-![Version](https://img.shields.io/badge/Version-1.0-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![Django](https://img.shields.io/badge/Django-5-darkgreen)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC)
+> **An interactive, full-stack Multiple-Choice Question (MCQ) platform designed for dynamic learning and randomized exam practice.**
 
-MCQMate is a full-stack academic platform providing students with randomized, timed exams based on strict curriculums. It allows users to specify their Class, Subject, and Chapter to receive uniquely generated question suites, helping prevent route memorization and encouraging active learning.
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Django](https://img.shields.io/badge/Django-5-092E20?logo=django)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?logo=postgresql)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css)
+![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?logo=vercel)
+![Render](https://img.shields.io/badge/Hosted_on-Render-46E3B7?logo=render)
+
+**MCQMate** is a responsive web application that helps students practice MCQs in a highly structured way. By selecting their specific Class, Subject, and Chapter, users get a uniquely randomized set of questions. The built-in timer and instant analytics encourage active learning and better time management.
+
+🌍 **Live Demo:** [Click here to visit MCQMate]([https://mcq-mate-fy8h.vercel.app/])  
+🔗 **Backend API Endpoint:** [Render API Link]([https://mcq-mate-backend.onrender.com/api/])
+
+---
+
+## ✨ Key Features
+
+- **Dynamic Navigation:** Hierarchical data selection (Level ➔ Subject ➔ Chapter).
+- **Randomized Question Engine:** Fetches a uniquely shuffled set of questions from the backend every time an exam starts.
+- **Smart Timer & Auto-Submit:** Exams are strictly timed and will automatically submit when the clock runs out.
+- **Instant Result Analytics:** Displays a detailed scorecard showing total score, correct/wrong answers, and a comprehensive breakdown of the exam.
+- **Super Responsive UI:** Beautifully crafted with Tailwind CSS to ensure a seamless experience on mobile phones, tablets, and desktop screens.
+- **Admin Dashboard:** Fully configured Django (Jazzmin) admin panel for easy content management and JSON uploads.
 
 ---
 
 ## ⚡ Tech Stack
 
-- **Frontend**: Next.js (TypeScript), Tailwind CSS.
-- **Backend**: Django REST Framework (Python).
-- **Database**: PostgreSQL (Production ready).
+### Frontend
+- **Framework:** Next.js (TypeScript)
+- **Styling:** Tailwind CSS
+- **Deployment:** Vercel
 
-## ✨ Key Features
-
-1. **Academic Structuring Logic**: Dropdown navigations dynamically fetch Class ➔ Subject ➔ Chapter taxonomies.
-2. **Custom Configurations**: Define maximum variables (e.g. 20 random MCQs in 15 minutes).
-3. **Responsive Interface**: Super mobile-optimized cards, supporting clean interfaces across iPhones, iPads, and native desktop screens.
-4. **Automated Submittal Check**: Syncing visual timers auto-submit to Django upon expiry.
-5. **Instant Analytics**: Detailed scorecard including percentage, total, correct mappings, and a visual UI breakdown.
+### Backend
+- **Framework:** Django & Django REST Framework
+- **Database:** PostgreSQL (Hosted on Neon.tech)
+- **Deployment:** Render (with Gunicorn & Whitenoise)
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Local Development Setup
 
-Follow these steps to configure MCQMate on your local machine:
+If you want to run this project locally, follow these steps:
 
-### 1. Backend (Django) Setup
+### 1. Clone the Repository
 ```bash
-# Navigate to backend directory
+git clone [https://github.com/jihad-islam/MCQ-Mate.git](https://github.com/jihad-islam/MCQ-Mate.git)
+cd MCQ-Mate
+```
+
+### 2. Backend Setup (Django)
+Open a terminal and navigate to the `backend` folder:
+```bash
 cd backend
 
-# Create Virtual Environment
-python3 -m venv venv
-source venv/bin/activate
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-# Install requirements
+# Install dependencies
 pip install -r requirements.txt
 
-# Run migrations to setup DB
-python manage.py makemigrations
+# Create a .env file and add your database variables
+# DEBUG=True
+# DATABASE_URL=your_neon_postgres_url
+
+# Run migrations and start server
 python manage.py migrate
-
-# (Optional) Seed the database with initial questions
-python manage.py shell < seed_data.py
-
-# Run development server
 python manage.py runserver
 ```
-*The backend API should now be running cleanly on `http://127.0.0.1:8000/`*
+*The backend API will run on `http://127.0.0.1:8000/`*
 
-### 2. Frontend (Next.js) Setup
+### 3. Frontend Setup (Next.js)
+Open a new terminal and navigate to the `frontend` folder:
 ```bash
-# Navigate to frontend directory in a separate terminal
 cd frontend
 
-# Install Node dependencies
+# Install Node modules
 npm install
 
-# Start the interactive UI
+# Create a .env.local file and link the API
+# NEXT_PUBLIC_API_URL=[http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+# Start the development server
 npm run dev
 ```
-*Your application is now viewable at `http://localhost:3000/`*
+*The frontend UI will run on `http://localhost:3000/`*
 
 ---
 
-## 📜 Version History
+## 👨‍💻 Developed By
 
-- **v1.0 (Current)**:
-  - Initial Production Refactor.
-  - Complete Mobile Responsive Design overhauled (Flex mappings & Typography normalization).
-  - Codebase extensively commented leveraging Clean Code readability protocols.
-  - Performance improvements across React States.
-- **v0.5.x**:
-  - Implementation of Timers, API links, Django randomization functionality.
-- **v0.1.x**:
-  - Fundamental UI mocks and layout drafts.
+**Md. Jihad Islam** GitHub: [@jihad-islam](https://github.com/jihad-islam)
 
-## 👥 Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+---
 
 ## 📄 License
-[MIT](https://choosealicense.com/licenses/mit/)
+This project is open-source and available under the [MIT License](https://choosealicense.com/licenses/mit/).
