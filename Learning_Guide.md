@@ -61,6 +61,48 @@ Understanding the data traversal:
 
 Understanding the codebase layout is key to navigating MCQMate. 
 
+### Directory Tree
+```text
+mcq/
+├── backend/
+│   ├── exams/
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   └── ...
+│   ├── mcq_project/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── ...
+│   ├── build.sh
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── seed_data.py
+└── frontend/
+    ├── public/
+    ├── src/
+    │   ├── app/
+    │   │   ├── exam/
+    │   │   │   └── page.tsx
+    │   │   ├── review/
+    │   │   │   └── page.tsx
+    │   │   ├── layout.tsx
+    │   │   └── page.tsx
+    │   ├── components/
+    │   │   ├── ExamConfig.tsx
+    │   │   ├── ExamInterface.tsx
+    │   │   ├── FormattedMathText.tsx
+    │   │   ├── SelectionFlow.tsx
+    │   │   ├── Timer.tsx
+    │   │   └── ...
+    │   └── lib/
+    │       └── api.ts
+    ├── package.json
+    └── ...
+```
+
 ### Frontend (Next.js Application)
 - **`src/app/page.tsx`**: The main entry point (Homepage). It houses the hero section, the academic selector (SelectionFlow), and the config panel (ExamConfig). Evaluates parameters and routes to the exam dashboard.
 - **`src/app/exam/page.tsx`**: The dashboard that serves the exam interface. It wraps data fetching in a `Suspense` boundary and controls loading/error conditions.
