@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db.models import Count
 from .models import Level, Subject, Chapter, Question, Option
 from .serializers import LevelSerializer, SubjectSerializer, ChapterSerializer, QuestionSerializer
 import random
@@ -14,7 +15,7 @@ class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SubjectSerializer
 
 class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Chapter.objects.all()
+    queryset = Chapter.objects.annotate(total_mcqs=Count('questions'))
     serializer_class = ChapterSerializer
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):

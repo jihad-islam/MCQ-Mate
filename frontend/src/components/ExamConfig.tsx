@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 interface ExamConfigProps {
   onConfigUpdate: (mcqCount: number, timeLimit: number) => void;
   isDisabled: boolean;
+  availableMcqs?: number | null;
 }
 
-export default function ExamConfig({ onConfigUpdate, isDisabled }: ExamConfigProps) {
+export default function ExamConfig({ onConfigUpdate, isDisabled, availableMcqs }: ExamConfigProps) {
   const [mounted, setMounted] = useState(false);
   const [mcqCount, setMcqCount] = useState<number | ''>(''); // Starts empty
   const [timeLimit, setTimeLimit] = useState<number | ''>(''); // Starts empty
@@ -64,9 +65,16 @@ export default function ExamConfig({ onConfigUpdate, isDisabled }: ExamConfigPro
       <div className="space-y-6 flex-grow">
         {/* Number of MCQs */}
         <div>
-          <label className="block text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-2">
-            Number of Questions
-          </label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-0">
+              Number of Questions
+            </label>
+            {availableMcqs !== undefined && availableMcqs !== null && (
+              <span className={`text-[10px] sm:text-xs font-bold ${availableMcqs > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {availableMcqs > 0 ? `${availableMcqs} mcq available in this chapter` : `No mcq is available in this chapter`}
+              </span>
+            )}
+          </div>
           <input
             type="number"
             min="1"

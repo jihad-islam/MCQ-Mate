@@ -1,4 +1,6 @@
+import os
 import json
+import requests
 from django import forms
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
@@ -52,9 +54,41 @@ class UploadMCQForm(forms.Form):
                 pass
 
 
+class QuestionAdminForm(forms.ModelForm):
+    upload_image = forms.ImageField(required=False, label="Upload Image (Auto-generates URL)")
+
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        upload_image = self.cleaned_data.get('upload_image')
+
+        if upload_image:
+            api_key = os.environ.get('IMGBB_API_KEY')
+            url = f"https://api.imgbb.com/1/upload?key={api_key}"
+            
+            # The file pointer needs to be at the beginning
+            upload_image.file.seek(0)
+            response = requests.post(url, files={'image': upload_image.file})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'data' in data and 'url' in data['data']:
+                    instance.image_url = data['data']['url']
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
+    form = QuestionAdminForm
     list_display = ('id', 'text_excerpt', 'chapter')
+    list_display_links = ('id', 'text_excerpt')
     list_filter = ('chapter__subject__level', 'chapter__subject', 'chapter')
     search_fields = ('text',)
     inlines = [OptionInline]
@@ -83,6 +117,8 @@ class QuestionAdmin(admin.ModelAdmin):
                     with transaction.atomic():
                         for item in data:
                             text = item.get('text')
+                            image_url = item.get('image_url')
+                            board_reference = item.get('board_reference')
                             explanation = item.get('explanation')
                             options = item.get('options')
 
@@ -93,6 +129,8 @@ class QuestionAdmin(admin.ModelAdmin):
                             question = Question.objects.create(
                                 chapter=chapter,
                                 text=text,
+                                image_url=image_url,
+                                board_reference=board_reference,
                                 explanation=explanation
                             )
                             for opt in options:

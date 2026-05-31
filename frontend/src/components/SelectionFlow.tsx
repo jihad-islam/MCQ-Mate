@@ -4,7 +4,7 @@ import { Chapter, fetchChaptersBySubject, fetchLevels, fetchSubjectsByLevel, Lev
 import { useEffect, useState } from 'react';
 
 interface SelectionFlowProps {
-  onSelectionComplete: (selectedChapterId: number | null) => void;
+  onSelectionComplete: (selectedChapterId: number | null, availableMcqs: number | null) => void;
 }
 
 export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProps) {
@@ -42,7 +42,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
     if (selectedLevel === '') {
       setSubjects([]); setSelectedSubject('');
       setChapters([]); setSelectedChapter('');
-      onSelectionComplete(null);
+      onSelectionComplete(null, null);
       return;
     }
     const loadSubjects = async () => {
@@ -51,7 +51,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
         setSubjects(data);
         setSelectedSubject('');
         setChapters([]); setSelectedChapter('');
-        onSelectionComplete(null);
+        onSelectionComplete(null, null);
       } catch (err) {
         setError('Failed to load subjects');
       }
@@ -64,7 +64,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
   useEffect(() => {
     if (selectedSubject === '') {
       setChapters([]); setSelectedChapter('');
-      onSelectionComplete(null);
+      onSelectionComplete(null, null);
       return;
     }
     const loadChapters = async () => {
@@ -72,7 +72,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
         const data = await fetchChaptersBySubject(Number(selectedSubject));
         setChapters(data);
         setSelectedChapter('');
-        onSelectionComplete(null);
+        onSelectionComplete(null, null);
       } catch (err) {
         setError('Failed to load chapters');
       }
@@ -83,7 +83,12 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
 
   const handleChapterSelect = (chapterId: number) => {
     setSelectedChapter(chapterId);
-    onSelectionComplete(chapterId || null);
+    if (!chapterId) {
+      onSelectionComplete(null, null);
+      return;
+    }
+    const chapter = chapters.find(c => c.id === chapterId);
+    onSelectionComplete(chapterId, chapter ? chapter.total_mcqs : null);
   };
 
   if (!mounted) {

@@ -69,7 +69,21 @@ export default function ReviewPage() {
                     </div>
                     <p className="text-lg font-bold text-slate-800 dark:text-slate-100 mt-2">
                       <FormattedMathText text={question?.text || ""} />
+                      {question?.board_reference && (
+                        <span className="ml-3 inline-block align-middle text-xs font-semibold text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-700 px-2.5 py-1 rounded-md">
+                          {question.board_reference}
+                        </span>
+                      )}
                     </p>
+                    {question?.image_url && (
+                      <div className="mt-4 mb-2">
+                        <img 
+                          src={question.image_url} 
+                          alt="Question visual" 
+                          className="max-w-full max-h-[300px] object-contain rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                        />
+                      </div>
+                    )}
                   </div>
                   {isCorrect ? (
                     <CheckCircle className="w-8 h-8 text-emerald-500 flex-shrink-0" />

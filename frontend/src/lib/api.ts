@@ -16,6 +16,7 @@ export interface Chapter {
   id: number;
   name: string;
   subject: number;
+  total_mcqs: number;
 }
 
 export interface Option {
@@ -26,6 +27,8 @@ export interface Option {
 export interface Question {
   id: number;
   text: string;
+  image_url?: string;
+  board_reference?: string;
   chapter: number;
   options: Option[];
 }

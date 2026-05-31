@@ -12,12 +12,14 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'chapter', 'options']
+        fields = ['id', 'text', 'image_url', 'board_reference', 'chapter', 'options']
 
 class ChapterSerializer(serializers.ModelSerializer):
+    total_mcqs = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Chapter
-        fields = ['id', 'name', 'subject']
+        fields = ['id', 'name', 'subject', 'total_mcqs']
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:

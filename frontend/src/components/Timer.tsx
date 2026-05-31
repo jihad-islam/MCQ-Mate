@@ -13,13 +13,14 @@ export default function Timer({ timeLimit, questions }: TimerProps) {
   const [isTimeUp, setIsTimeUp] = useState(false);
 
   useEffect(() => {
+    if (timeLimit <= 0) return;
+
     // Set up a flag in localStorage to signal exam submission
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           setIsTimeUp(true);
-          // Trigger auto-submit by dispatching a custom event
-          window.dispatchEvent(new CustomEvent('timeUp'));
+          clearInterval(interval);
           return 0;
         }
         return prev - 1;
@@ -27,7 +28,14 @@ export default function Timer({ timeLimit, questions }: TimerProps) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [timeLimit]);
+
+  useEffect(() => {
+    if (isTimeUp && timeLimit > 0 && timeRemaining <= 0) {
+      // Trigger auto-submit by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('timeUp'));
+    }
+  }, [isTimeUp, timeLimit, timeRemaining]);
 
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = timeRemaining % 60;

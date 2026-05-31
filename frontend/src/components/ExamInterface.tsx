@@ -50,22 +50,7 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
     }
   }, [onSubmitComplete]);
 
-  useEffect(() => {
-    const handleTimeUp = () => {
-      if (!submitted) handleSubmit();
-    };
-    window.addEventListener('timeUp', handleTimeUp);
-    return () => window.removeEventListener('timeUp', handleTimeUp);
-  }, [userAnswers, submitted]);
-
-  const handleOptionSelect = useCallback((questionId: number, optionId: number) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionId,
-    }));
-  }, []);
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -88,7 +73,22 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [questions, userAnswers, onSubmitComplete]);
+
+  useEffect(() => {
+    const handleTimeUp = () => {
+      if (!submitted && questions.length > 0) handleSubmit();
+    };
+    window.addEventListener('timeUp', handleTimeUp);
+    return () => window.removeEventListener('timeUp', handleTimeUp);
+  }, [submitted, questions.length, handleSubmit]);
+
+  const handleOptionSelect = useCallback((questionId: number, optionId: number) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: optionId,
+    }));
+  }, []);
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -232,7 +232,22 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
 
           <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 leading-relaxed min-h-[4rem]">
             <FormattedMathText text={currentQuestion?.text || ""} />
+            {currentQuestion?.board_reference && (
+              <span className="ml-3 inline-block align-middle text-xs font-semibold text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-700 px-2.5 py-1 rounded-md">
+                {currentQuestion.board_reference}
+              </span>
+            )}
           </p>
+
+          {currentQuestion?.image_url && (
+            <div className="mt-6 mb-4 flex justify-center sm:justify-start">
+              <img 
+                src={currentQuestion.image_url} 
+                alt="Question visual" 
+                className="max-w-full max-h-[400px] object-contain rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 flex-grow">

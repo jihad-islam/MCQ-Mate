@@ -10,6 +10,7 @@ export default function Home() {
   const router = useRouter(); // Next.js hook for client-side navigation
   const [mounted, setMounted] = useState(false); // Prevents hydration mismatch between server and client
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null); // Stores the user's selected chapter
+  const [availableMcqs, setAvailableMcqs] = useState<number | null>(null); // Stores the total MCQs available in the selected chapter
   
   const [mcqCount, setMcqCount] = useState<number>(0); // Stores the number of questions requested by the user
   const [timeLimit, setTimeLimit] = useState<number>(0); // Stores the exam time limit in minutes
@@ -20,8 +21,9 @@ export default function Home() {
   }, []);
 
   // Callback to handle when the user finishes selecting Class -> Subject -> Chapter
-  const handleSelectionComplete = (chapterId: number | null) => {
+  const handleSelectionComplete = (chapterId: number | null, mcqs: number | null) => {
     setSelectedChapterId(chapterId);
+    setAvailableMcqs(mcqs);
   };
 
   // Callback to sync exam settings (questions count and time limit) from the config component
@@ -122,6 +124,7 @@ export default function Home() {
             <ExamConfig
               onConfigUpdate={handleConfigUpdate}
               isDisabled={false} 
+              availableMcqs={availableMcqs}
             />
 
             <button
