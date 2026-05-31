@@ -9,8 +9,8 @@ import { Suspense, useEffect, useState } from 'react';
 
 // Main content wrapper to handle data fetching and UI state
 function ExamPageContent() {
-  const router = useRouter(); // For programmatic navigation (e.g., returning home on error)
-  const searchParams = useSearchParams(); // To extract chapterId, mcqCount, and timeLimit from URL
+  const router = useRouter(); // For programmatic navigation
+  const searchParams = useSearchParams(); // To extract parameters from URL
 
   // State management for the exam data
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -18,9 +18,8 @@ function ExamPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Extract parameters from the URL
-  const chapterIdStr = searchParams.get('chapterId');
-  const chapterId = chapterIdStr ? parseInt(chapterIdStr) : null;
+  // UPDATE: Extract chapterIds (string) instead of chapterId (number)
+  const chapterIds = searchParams.get('chapterIds');
   const mcqCount = parseInt(searchParams.get('mcqCount') || '10');
   const timeLimit = parseInt(searchParams.get('timeLimit') || '30');
 
@@ -33,14 +32,16 @@ function ExamPageContent() {
     // Async function to fetch exam questions from the Django backend
     const loadQuestions = async () => {
       try {
-        if (!chapterId) {
-          setError('Chapter ID is missing');
+        // Validation check updated for chapterIds
+        if (!chapterIds) {
+          setError('Chapter IDs are missing');
           setLoading(false);
           return;
         }
 
         setLoading(true);
-        const data = await fetchQuestionsByChapter(chapterId, mcqCount);
+        // Pass the string "1,2,3" directly to the updated API function
+        const data = await fetchQuestionsByChapter(chapterIds, mcqCount);
         
         // Handle varying API responses to gracefully extract the questions list
         const fetchedQuestions = (data as any)?.results ? (data as any).results : data;
@@ -49,12 +50,12 @@ function ExamPageContent() {
         // Log errors to the UI for user visibility
         setError(err.message || 'Failed to load questions');
       } finally {
-        setLoading(false); // Stop loading indicator regardless of success or failure
+        setLoading(false); // Stop loading indicator
       }
     };
 
     loadQuestions();
-  }, [chapterId, mcqCount]);
+  }, [chapterIds, mcqCount]);
 
   // Render a responsive loading state while fetching data
   if (loading) {
@@ -92,17 +93,14 @@ function ExamPageContent() {
   // The main exam view
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 sm:py-10 px-4 sm:px-6 lg:px-8 transition-colors flex flex-col">
-      {/* Changed max-w-4xl to max-w-3xl to perfectly align with the question card */}
       <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col">
         <div className="flex justify-end mb-6 sm:mb-8 flex-shrink-0">
           <ThemeToggle />
         </div>
 
-        {/* Timer Header - Strictly conditionally rendered to avoid rendering post-submit */}
+        {/* Timer Component - Wrapper div removed to let DesktopTimer & MobileTimer handle their own UI strictly */}
         {!isSubmitted && questions.length > 0 && (
-          <div className="mb-4 sm:mb-6 flex-shrink-0 sticky top-2 sm:top-4 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-            <Timer timeLimit={timeLimit} questions={questions} />
-          </div>
+          <Timer timeLimit={timeLimit} questions={questions} />
         )}
 
         {/* Exam Interface Component manages individual questions and submission */}

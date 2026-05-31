@@ -1,6 +1,7 @@
 'use client';
 
 import { FormattedMathText } from '@/components/FormattedMathText';
+import PdfDownloadButton from '@/components/PdfDownloadButton';
 import { Question } from '@/lib/api';
 import { ArrowLeft, CheckCircle, Home, Info, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -40,7 +41,9 @@ export default function ReviewPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        
+        {/* Header Section with PDF Download Button */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
           <button
             onClick={() => router.push('/')}
             className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors font-medium"
@@ -48,17 +51,32 @@ export default function ReviewPage() {
             <ArrowLeft className="w-5 h-5" />
             Back to Home
           </button>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Review Answers</h1>
+          
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 hidden sm:block tracking-tight">
+            Review Answers
+          </h1>
+          
+          <div className="w-full sm:w-auto flex justify-end">
+            <PdfDownloadButton targetId="pdf-review-content" fileName="MCQMate_Performance_Review.pdf" />
+          </div>
         </div>
 
-        <div className="space-y-6">
+        {/* Content Area to be Exported as PDF */}
+        <div id="pdf-review-content" className="space-y-6 rounded-3xl pb-4">
+          
+          {/* PDF-only visible header (helps when looking at the exported document) */}
+          <div className="hidden print-header mb-8 text-center px-4">
+            <h2 className="text-3xl font-black text-slate-800">MCQMate Exam Review</h2>
+            <p className="text-slate-500 mt-2 font-medium">Performance and Answer Breakdown</p>
+          </div>
+
           {questions.map((question, idx) => {
             const qResult = breakdown?.find((b) => b.question_id === question.id);
             const userSelectedId = userAnswers[question.id];
             const isCorrect = qResult?.correct_option_id === userSelectedId;
 
             return (
-              <div key={question.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors">
+              <div key={question.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors break-inside-avoid">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-3">
@@ -138,10 +156,11 @@ export default function ReviewPage() {
           })}
         </div>
 
-        <div className="pt-8 flex justify-center pb-8">
+        {/* Bottom Home Button */}
+        <div className="pt-4 flex justify-center pb-8">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl w-full sm:w-auto text-lg"
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl w-full sm:w-auto text-lg focus:ring-4 focus:ring-violet-500/20"
           >
             <Home className="w-6 h-6" />
             Return to Home

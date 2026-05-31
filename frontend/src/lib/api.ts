@@ -73,10 +73,11 @@ export async function fetchChaptersBySubject(subjectId: number): Promise<Chapter
   return chapters.filter((chapter: Chapter) => chapter.subject === subjectId);
 }
 
-export async function fetchQuestionsByChapter(chapterId: number, limit?: number): Promise<Question[]> {
+// UPDATE: Changed chapterId to chapterIds (string) to handle multiple chapters
+export async function fetchQuestionsByChapter(chapterIds: string, limit?: number): Promise<Question[]> {
   const url = limit 
-    ? `${API_BASE_URL}/questions/?chapterId=${chapterId}&mcqCount=${limit}`
-    : `${API_BASE_URL}/questions/?chapterId=${chapterId}`;
+    ? `${API_BASE_URL}/questions/?chapterIds=${chapterIds}&mcqCount=${limit}`
+    : `${API_BASE_URL}/questions/?chapterIds=${chapterIds}`;
   
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error('Failed to fetch questions');

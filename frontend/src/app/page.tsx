@@ -9,8 +9,10 @@ import { useEffect, useState } from 'react';
 export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
-  const [availableMcqs, setAvailableMcqs] = useState<number | null>(null);
+  
+  // Update: Changed from single ID to Array of IDs for multi-select
+  const [selectedChapterIds, setSelectedChapterIds] = useState<number[]>([]);
+  const [availableMcqs, setAvailableMcqs] = useState<number>(0);
   
   const [mcqCount, setMcqCount] = useState<number>(0);
   const [timeLimit, setTimeLimit] = useState<number>(0);
@@ -19,8 +21,8 @@ export default function Home() {
     setMounted(true);
   }, []);
 
-  const handleSelectionComplete = (chapterId: number | null, mcqs: number | null) => {
-    setSelectedChapterId(chapterId);
+  const handleSelectionComplete = (chapterIds: number[], mcqs: number) => {
+    setSelectedChapterIds(chapterIds);
     setAvailableMcqs(mcqs);
   };
 
@@ -30,8 +32,8 @@ export default function Home() {
   };
 
   const handleStartExam = () => {
-    if (selectedChapterId === null) {
-      alert('⚠️ Please select a Class, Subject, and Chapter to start the exam.');
+    if (selectedChapterIds.length === 0) {
+      alert('⚠️ Please select a Class, Subject, and at least one Chapter to start the exam.');
       return;
     }
 
@@ -44,8 +46,9 @@ export default function Home() {
       return;
     }
 
+    // Update: Convert array [4,5] to string "4,5" for URL parameter
     const searchParams = new URLSearchParams({
-      chapterId: selectedChapterId.toString(),
+      chapterIds: selectedChapterIds.join(','),
       mcqCount: mcqCount.toString(),
       timeLimit: timeLimit.toString(),
     });
@@ -62,11 +65,11 @@ export default function Home() {
             <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
           </div>
           <div className="text-center mb-10 sm:mb-16">
-            <div className="inline-flex items-center justify-center mb-4">
+            <a href="/" className="inline-flex items-center justify-center mb-4 cursor-pointer hover:opacity-80 transition-opacity">
               <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">
                 MCQ<span className="text-violet-600 dark:text-violet-500">Mate</span>
               </h1>
-            </div>
+            </a>
             <p className="text-slate-500 dark:text-slate-400 font-medium text-base sm:text-lg">Your MCQ practice partner.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
@@ -79,7 +82,6 @@ export default function Home() {
   }
 
   return (
-    // 'flex flex-col' দিয়ে wrapper তৈরি করা হয়েছে যাতে footer নিচে থাকে
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors flex flex-col">
       <div className="max-w-5xl mx-auto w-full flex-grow">
         <div className="flex justify-between items-start mb-8 sm:mb-12">
@@ -88,14 +90,14 @@ export default function Home() {
         </div>
         
         <div className="text-center mb-10 sm:mb-16">
-          <div className="relative inline-flex items-center justify-center mb-3">
+          <a href="/" className="relative inline-flex items-center justify-center mb-3 cursor-pointer hover:opacity-80 transition-opacity group">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
               MCQ<span className="text-violet-600 dark:text-violet-500">Mate</span>
             </h1>
-            <span className="absolute left-full ml-3 top-0 sm:top-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-[10px] sm:text-xs font-black tracking-wider uppercase border border-violet-200 dark:border-violet-500/20 shadow-sm">
+            <span className="absolute left-full ml-3 top-0 sm:top-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-[10px] sm:text-xs font-black tracking-wider uppercase border border-violet-200 dark:border-violet-500/20 shadow-sm group-hover:bg-violet-200 dark:group-hover:bg-violet-500/20 transition-colors">
               v1.0
             </span>
-          </div>
+          </a>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-base sm:text-lg">Your MCQ practice partner.</p>
         </div>
 
@@ -118,11 +120,12 @@ export default function Home() {
               Start Exam
             </button>
 
-            {selectedChapterId && (
+            {/* Update: Dynamic text based on how many chapters are selected */}
+            {selectedChapterIds.length > 0 && (
               <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-2xl text-center transition-all animate-in fade-in slide-in-from-bottom-2">
                 <p className="text-sm font-bold flex items-center justify-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
-                  Chapter selected & ready
+                  {selectedChapterIds.length} {selectedChapterIds.length > 1 ? 'Chapters' : 'Chapter'} selected & ready
                 </p>
               </div>
             )}
@@ -130,7 +133,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Seamless Minimal Developer Footer */}
       <footer className="mt-auto pt-12 pb-4 text-center text-sm text-slate-400 dark:text-slate-500 bg-transparent opacity-80 hover:opacity-100 transition-opacity">
         Designed & Developed by{' '}
         <a

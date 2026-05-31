@@ -90,7 +90,7 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
     return () => window.removeEventListener('timeUp', handleTimeUp);
   }, [submitted, questions?.length, handleSubmit]);
 
-  // 5. Modular Keyboard Shortcuts Hook (অবশ্যই handleSubmit-এর নিচে থাকতে হবে)
+  // 5. Modular Keyboard Shortcuts Hook
   useExamShortcuts({
     questions,
     currentQuestionIndex,
@@ -131,22 +131,64 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
         </div>
       )}
 
-      <QuestionCard 
-        question={questions[currentQuestionIndex]}
-        currentIndex={currentQuestionIndex}
-        totalQuestions={questions.length}
-        userAnswers={userAnswers}
-        onSelectOption={handleOptionSelect}
-      />
+      {/* MOBILE VIEW (Scrollable Layout) */}
+      <div className="md:hidden flex flex-col gap-6">
+        {questions.map((question, index) => (
+          <QuestionCard 
+            key={question.id}
+            question={question}
+            currentIndex={index}
+            totalQuestions={questions.length}
+            userAnswers={userAnswers}
+            onSelectOption={handleOptionSelect}
+          />
+        ))}
+        
+        {/* Mobile Submit Button placed at the very bottom */}
+        <div className="pt-2">
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 shadow-[0_8px_30px_rgb(5,150,105,0.2)]"
+          >
+            {isLoading ? 'Submitting...' : 'Submit Exam'}
+          </button>
+        </div>
+      </div>
 
-      <ExamControls 
-        onPrev={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-        onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
-        onSubmit={handleSubmit}
-        isFirst={currentQuestionIndex === 0}
-        isLast={currentQuestionIndex === questions.length - 1}
-        isLoading={isLoading}
-      />
+      {/* DESKTOP VIEW (Paginated Layout) */}
+      <div className="hidden md:block">
+        <QuestionCard 
+          question={questions[currentQuestionIndex]}
+          currentIndex={currentQuestionIndex}
+          totalQuestions={questions.length}
+          userAnswers={userAnswers}
+          onSelectOption={handleOptionSelect}
+        />
+
+        <ExamControls 
+          onPrev={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+          onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
+          onSubmit={handleSubmit}
+          isFirst={currentQuestionIndex === 0}
+          isLast={currentQuestionIndex === questions.length - 1}
+          isLoading={isLoading}
+        />
+
+        {/* Compact Desktop Keyboard Navigation Notice */}
+        <div className="flex justify-center items-center gap-2 mt-5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 opacity-60 cursor-default">
+          <span className="uppercase tracking-wider">Navigate</span>
+          <div className="flex gap-1">
+            <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">←</span>
+            <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">↑</span>
+            <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">↓</span>
+            <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">→</span>
+          </div>
+          <span className="uppercase tracking-wider ml-2">Submit</span>
+          <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">Enter ↵</span>
+        </div>
+      </div>
+
     </div>
   );
 }

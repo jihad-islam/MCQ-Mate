@@ -18,25 +18,62 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Chapter.objects.annotate(total_mcqs=Count('questions'))
     serializer_class = ChapterSerializer
 
+
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
 
     def get_queryset(self):
         queryset = Question.objects.all()
-        # Read parameters matching frontend nomenclature or fallback to old ones
-        chapter_id = self.request.query_params.get('chapterId') or self.request.query_params.get('chapter')
-        limit = self.request.query_params.get('mcqCount') or self.request.query_params.get('limit')
         
-        if chapter_id:
-            queryset = queryset.filter(chapter_id=chapter_id)
-        if limit:
+        # Support both new 'chapterIds' (for multi-select) and old parameters for fallback
+        chapter_ids_str = self.request.query_params.get('chapterIds') or self.request.query_params.get('chapterId') or self.request.query_params.get('chapter')
+        limit_str = self.request.query_params.get('mcqCount') or self.request.query_params.get('limit')
+        
+        if chapter_ids_str:
             try:
-                limit_int = int(limit)
-                pks = list(queryset.values_list('pk', flat=True))
-                if len(pks) > limit_int:
-                    selected_pks = random.sample(pks, limit_int)
-                    # Use random.sample to avoid slow database-level order_by('?')
-                    queryset = queryset.filter(pk__in=selected_pks)
+                # Convert comma-separated string "4,5,6" to list of integers [4, 5, 6]
+                chapter_ids = [int(cid.strip()) for cid in chapter_ids_str.split(',') if cid.strip().isdigit()]
+                
+                if not chapter_ids:
+                    return queryset.none()
+                    
+                if limit_str:
+                    limit = int(limit_str)
+                    num_chapters = len(chapter_ids)
+                    
+                    base_count = limit // num_chapters
+                    
+                    selected_pks = []
+                    remaining_pks_pool = []
+                    
+                    # Step 1: Gather proportional base amount from each chapter
+                    for cid in chapter_ids:
+                        chapter_pks = list(Question.objects.filter(chapter_id=cid).values_list('pk', flat=True))
+                        
+                        if len(chapter_pks) <= base_count:
+                            # If chapter has fewer or exactly equal questions to base_count, take all of them
+                            selected_pks.extend(chapter_pks)
+                        else:
+                            # Take exactly base_count randomly from this chapter
+                            chosen = random.sample(chapter_pks, base_count)
+                            selected_pks.extend(chosen)
+                            # Add the unselected questions to a pool for later deficit handling
+                            remaining_pks_pool.extend(list(set(chapter_pks) - set(chosen)))
+                    
+                    # Step 2: Fulfill deficit (caused by remainders like 70/3 or chapters with insufficient questions)
+                    deficit = limit - len(selected_pks)
+                    if deficit > 0 and remaining_pks_pool:
+                        if len(remaining_pks_pool) <= deficit:
+                            selected_pks.extend(remaining_pks_pool)
+                        else:
+                            selected_pks.extend(random.sample(remaining_pks_pool, deficit))
+                            
+                    # Final Step: Filter by selected PKs and shuffle so chapters are completely mixed in the UI
+                    queryset = Question.objects.filter(pk__in=selected_pks).order_by('?')
+                else:
+                    # If no limit provided, just return all questions from selected chapters in random order
+                    queryset = queryset.filter(chapter_id__in=chapter_ids).order_by('?')
+                    
             except ValueError:
                 pass
                 
@@ -48,14 +85,6 @@ def submit_exam(request):
     """
     SECURITY: Backend scoring endpoint.
     Accepts student answers and calculates the score server-side.
-    
-    Expected payload: {
-        "answers": [
-            {"question_id": 1, "selected_option_id": 4},
-            {"question_id": 2, "selected_option_id": 5},
-            ...
-        ]
-    }
     """
     try:
         served_question_ids = request.data.get('served_question_ids', [])
@@ -78,11 +107,9 @@ def submit_exam(request):
             
             try:
                 question = Question.objects.get(id=q_id)
-                # Find the correct option for this question
                 correct_option = question.options.filter(is_correct=True).first()
                 correct_option_id = correct_option.id if correct_option else None
                 
-                # Check if the user selected the correct option
                 if selected_option_id:
                     option = Option.objects.get(id=selected_option_id, question_id=q_id)
                     if option.is_correct:
@@ -98,7 +125,6 @@ def submit_exam(request):
                     'explanation': question.explanation,
                 })
             except (Option.DoesNotExist, Question.DoesNotExist):
-                # Invalid option or question, count as wrong
                 wrong_count += 1
         
         total_questions = len(served_question_ids)
@@ -117,4 +143,3 @@ def submit_exam(request):
             {'error': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
-

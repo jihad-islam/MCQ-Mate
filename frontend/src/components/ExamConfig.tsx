@@ -10,8 +10,8 @@ interface ExamConfigProps {
 
 export default function ExamConfig({ onConfigUpdate, isDisabled, availableMcqs }: ExamConfigProps) {
   const [mounted, setMounted] = useState(false);
-  const [mcqCount, setMcqCount] = useState<number | ''>(''); // Starts empty
-  const [timeLimit, setTimeLimit] = useState<number | ''>(''); // Starts empty
+  const [mcqCount, setMcqCount] = useState<number | ''>(''); 
+  const [timeLimit, setTimeLimit] = useState<number | ''>(''); 
 
   useEffect(() => {
     setMounted(true);
@@ -65,13 +65,14 @@ export default function ExamConfig({ onConfigUpdate, isDisabled, availableMcqs }
       <div className="space-y-6 flex-grow">
         {/* Number of MCQs */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-end mb-2">
             <label className="block text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-0">
               Number of Questions
             </label>
-            {availableMcqs !== undefined && availableMcqs !== null && (
-              <span className={`text-[10px] sm:text-xs font-bold ${availableMcqs > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {availableMcqs > 0 ? `${availableMcqs} mcq available in this chapter` : `No mcq is available in this chapter`}
+            {/* BUG FIX: এখন শুধুমাত্র chapter সিলেক্ট করার পরই total MCQ দেখাবে */}
+            {availableMcqs !== undefined && availableMcqs !== null && availableMcqs > 0 && (
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-md">
+                Total MCQ: {availableMcqs}
               </span>
             )}
           </div>
