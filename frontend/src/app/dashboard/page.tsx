@@ -9,11 +9,6 @@ import BookmarksTab from '@/components/dashboard/BookmarksTab';
 import DashboardOverview from '@/components/dashboard/DashboardOverview';
 import ExamHistoryTab from '@/components/dashboard/ExamHistoryTab';
 
-// import BookmarksTab from '@/app/dashboard/BookmarksTab';
-// import DashboardOverview from '@/app/dashboard/DashboardOverview';
-// import ExamHistoryTab from '@/app/dashboard/ExamHistoryTab';
-// import BookmarksTab from '@/components/dashboard/BookmarksTab';
-
 export interface UserProfile {
   name: string;
   email: string;

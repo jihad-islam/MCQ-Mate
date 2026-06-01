@@ -23,6 +23,7 @@ export interface Chapter {
 export interface Option {
   id: number;
   text: string;
+  is_correct?: boolean;
 }
 
 export interface Question {
@@ -32,6 +33,7 @@ export interface Question {
   board_reference?: string;
   chapter: number;
   chapter_name?: string;
+  explanation?: string | null;
   options: Option[];
 }
 
