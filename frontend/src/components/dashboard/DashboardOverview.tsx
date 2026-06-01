@@ -91,7 +91,7 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
         </div>
 
         {/* Subscription Status Card */}
-        <div className={`lg:col-span-1 p-6 sm:p-8 rounded-3xl shadow-sm border flex flex-col items-center justify-center text-center h-full transition-colors ${subCardStyle}`}>
+        <div className={`lg:col-span-1 p-6 rounded-3xl shadow-sm border flex flex-col items-center justify-center text-center h-full sm:min-h-[300px] transition-colors ${subCardStyle}`}>
           
           <div className="flex flex-col items-center justify-center flex-grow w-full">
             {isActive ? (

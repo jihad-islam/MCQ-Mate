@@ -89,35 +89,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Modern Tab Navigation */}
-      <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50 w-fit">
+      <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50 w-full sm:w-fit scroll-smooth">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+          className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
             activeTab === 'overview' ? 'bg-white dark:bg-slate-700 text-violet-600 dark:text-violet-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/50'
           }`}
         >
-          <LayoutDashboard className="w-4 h-4" /> Overview
+          <LayoutDashboard className="w-4 h-4 flex-shrink-0" /> <span className="hidden sm:inline">Overview</span><span className="sm:hidden">Info</span>
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+          className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
             activeTab === 'history' ? 'bg-white dark:bg-slate-700 text-violet-600 dark:text-violet-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/50'
           }`}
         >
-          <History className="w-4 h-4" /> Exam History
+          <History className="w-4 h-4 flex-shrink-0" /> <span className="hidden sm:inline">Exam History</span><span className="sm:hidden">History</span>
         </button>
         <button
           onClick={() => setActiveTab('bookmarks')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+          className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
             activeTab === 'bookmarks' ? 'bg-white dark:bg-slate-700 text-violet-600 dark:text-violet-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/50'
           }`}
         >
-          <Bookmark className="w-4 h-4" /> Bookmarks
+          <Bookmark className="w-4 h-4 flex-shrink-0" /> Bookmarks
         </button>
       </div>
 
       {/* Tab Content Renders Here */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
         {activeTab === 'overview' && (
           <DashboardOverview profile={profile} onProfileUpdate={(newName) => setProfile({ ...profile, name: newName })} />
         )}
