@@ -91,8 +91,8 @@ export default function ExamHistoryTab() {
         {/* PERFECTLY UNIFORM HEADER */}
         <div className="flex items-center justify-between mb-6 pb-5 border-b border-slate-100 dark:border-slate-700/50">
           <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-blue-100 dark:bg-blue-500/20 rounded-xl">
-              <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-2.5 bg-violet-100 dark:bg-violet-500/20 rounded-xl">
+              <History className="w-6 h-6 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Recent Activity</h2>

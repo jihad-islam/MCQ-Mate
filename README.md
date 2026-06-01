@@ -23,7 +23,8 @@
 - **Smart Timer & Auto-Submit:** Exams are strictly timed and will automatically submit when the clock runs out.
 - **Instant Result Analytics:** Displays a detailed scorecard showing total score, correct/wrong answers, and a comprehensive breakdown of the exam.
 - **Super Responsive UI:** Beautifully crafted with Tailwind CSS to ensure a seamless experience on mobile phones, tablets, and desktop screens.
-- **Admin Dashboard:** Fully configured Django (Jazzmin) admin panel for easy content management and JSON uploads.
+- **User Dashboard:** Track exam history, manage subscriptions, and review bookmarked questions with explanations.
+- **Admin Dashboard:** Fully configured Django (Jazzmin) admin panel for easy content management.
 
 ---
 

@@ -5,10 +5,13 @@ MCQMate is a full-stack SaaS application that functions as an MCQ (Multiple Choi
 
 ## Application State
 Currently, the application includes the following features:
+- **Authentication & Profiles:** User authentication and profile management via the `users` app.
+- **User Dashboard:** A comprehensive dashboard (`/dashboard`) allowing users to review their profile, subscription status, Exam History, and Bookmarks.
 - **Exam Configuration:** Users select levels, subjects, and chapters, and specify the question limit and timer.
 - **Dynamic Exam Generation:** Fetches questions for the selected chapters from the backend API.
 - **Exam Interface & Timer:** Questions are displayed alongside a timer, allowing navigation between questions, keyboard shortcuts (via `useExamShortcuts`), and auto-submission when the time runs out.
 - **Review Page:** Shows detailed analytics (correct, wrong, score, explanations).
+- **Exam History & Bookmarks:** Tracks completed exams and allows bookmarking of questions (with explanations) for later review.
 - **PDF Export:** Support for downloading reports or result summaries as PDF.
 
 ## Folder structure
@@ -19,10 +22,13 @@ mcq/
 │   ├── exams/                # Core Django App containing Models, Views, APIs
 │   │   ├── management/commands/import_mcqs.py # Script for importing questions
 │   │   ├── migrations/       # Database migrations
-│   │   ├── models.py         # Defines Question, Option, Chapter, Subject, Level DB schema
+│   │   ├── models.py         # Defines Question, Option, Chapter, Subject, Level, History, Bookmarks DB schema
 │   │   ├── serializers.py    # DRF JSON transformers
 │   │   ├── urls.py           # API routing
-│   │   ├── views.py          # Viewsets and custom actions (submit-exam)
+│   │   ├── views.py          # Viewsets and custom actions (submit-exam, history, bookmarks)
+│   ├── users/                # New User App for Authentication & Profiles
+│   │   ├── models.py         # Custom user model
+│   │   ├── views.py          # Auth and profile APIs
 │   ├── mcq_project/          # Main Django configurations (settings, wsgi, asgi)
 │   ├── .env                  # Environment Variables
 │   ├── build.sh              # Build script for deployment
@@ -34,10 +40,13 @@ mcq/
 │   │   ├── app/              # App Router Pages
 │   │   │   ├── exam/page.tsx # Renders `ExamInterface` 
 │   │   │   ├── review/page.tsx # Displays results/reviews after test
+│   │   │   ├── dashboard/    # User dashboard for overview, history, and bookmarks
+│   │   │   ├── login/        # Authentication pages
 │   │   │   ├── globals.css   # Main CSS & Tailwind imports
 │   │   │   ├── layout.tsx    # Root layout container
 │   │   │   ├── page.tsx      # Entry flow (Level/Subject selection & Config)
 │   │   ├── components/       # Reusable components
+│   │   │   ├── dashboard/    # Dashboard tabs (Overview, BookmarksTab, ExamHistoryTab)
 │   │   │   ├── exam/         # Components specific to the real-time exam (e.g., Timer, DesktopTimer, QuestionCard, ExamInterface, ResultView)
 │   │   │   ├── selection/    # Flow components for intro page (SelectionFlow, ExamConfig)
 │   │   │   ├── ui/           # Generic components (PdfDownloadButton, ThemeToggle, MultiSelectDropdown)
@@ -62,18 +71,22 @@ This is the root page of the application that handles test setup:
 
 ### 2. `frontend/src/lib/api.ts`
 Acts as the bridge between Next.js and the Django backend API:
-- **Interfaces:** Centralizes types defining `Level`, `Subject`, `Chapter`, `Question`, `Option`, `ExamSubmitPayload`, and `ExamResult`.
-- **API Call Functions:** Includes wrappers using native `fetch` to get list configurations (`fetchLevels`, `fetchSubjectsByLevel`, `fetchChaptersBySubject`), and queries to dynamically fetch randomized `Question` items (`fetchQuestionsByChapter`). 
-- **Submit Endpoints:** Houses `submitExam` which POSTs the user selections to calculate scores securely on the backend, returning correct answers and explanations.
+- **Interfaces:** Centralizes types defining endpoints.
+- **API Call Functions:** Includes wrappers for levels, subjects, chapters, questions fetching.
+- **Tracking & Feedback Endpoints:** `submitExam` computes answers and submits to history. Includes `fetchUserHistory`, `fetchBookmarks`, and `toggleBookmark`.
+- Adds Bearer Token headers from `localStorage` where required.
 
-### 3. `frontend/src/components/selection/SelectionFlow.tsx`
-Handles the cascading dropdown selections required to retrieve a set of chapters. Uses UI dropdowns (`MultiSelectDropdown` & `SingleSelectDropdown`) and passes states upwards to `page.tsx` upon valid selection of modules to evaluate.
+### 3. `frontend/src/components/dashboard/`
+Handles user profile tracking. Includes:
+- `DashboardOverview.tsx`: Views and edits user info (name, email) and displays mock active subscription statuses.
+- `BookmarksTab.tsx`: Previews saved questions along with their dynamically revealed right answers + explanations.
+- `ExamHistoryTab.tsx`: Maps previous `ExamHistory` records.
 
 ### 4. `frontend/src/components/exam/ExamInterface.tsx`
 The primary controller for the actual exam instance:
-- Orchestrates the timer, question rendering (`QuestionCard`), controls (`ExamControls`), and overall UI states (loading, exam runtime, auto-submit, result view).
-- Interacts closely with `frontend/src/hooks/useExamShortcuts.tsx` for hotkeys (e.g., next question, select option).
-- Keeps track of all selected options and submits payload to `lib/api.ts` when time limits are reached.
+- Orchestrates the timer, question rendering (`QuestionCard`), controls (`ExamControls`), and overall UI states.
+- Interacts closely with `frontend/src/hooks/useExamShortcuts.tsx` for hotkeys.
+- Submits completed answers using `api.ts`. Includes authentication token allowing completion data to be logged to their user history.
 
 ### 5. `backend/exams/views.py` (Backend API equivalent)
-Contains the viewsets that provide data for components and validates the submission format receiving answers and generating dynamic performance metrics (correct answers, breakdowns) securely server-side before responding to `api.ts`.
+Contains the viewsets that provide data for components and validates the submission format receiving answers and generating dynamic performance metrics securely server-side. Additionally generates User History and Bookmark toggling APIs.
