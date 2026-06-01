@@ -31,6 +31,7 @@ export interface Question {
   image_url?: string;
   board_reference?: string;
   chapter: number;
+  chapter_name?: string;
   options: Option[];
 }
 

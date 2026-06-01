@@ -1,6 +1,7 @@
 'use client';
 
-import { Calendar, Clock, CreditCard, Mail, Phone, ShieldAlert, ShieldCheck, User } from 'lucide-react';
+import EditProfileModal from '@/components/ui/EditProfileModal';
+import { Calendar, CreditCard, Edit3, Mail, Phone, ShieldAlert, ShieldCheck, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -20,10 +21,12 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      // BUG FIX: localStorage থেকে 'access_token' নেওয়া হচ্ছে
       const token = localStorage.getItem('access_token');
       
       if (!token) {
@@ -89,9 +92,8 @@ export default function DashboardPage() {
   const isActive = profile?.subscription?.status === 'active';
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)]">
+    <div className="max-w-5xl mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)] relative">
       
-      {/* Header Section */}
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -105,9 +107,18 @@ export default function DashboardPage() {
         
         {/* Profile Info Card */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-100 dark:border-slate-700/50">
-            <User className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Account Details</h2>
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100 dark:border-slate-700/50">
+            <div className="flex items-center gap-3">
+              <User className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Account Details</h2>
+            </div>
+            {/* Edit Profile Button */}
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center gap-2 text-sm font-bold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-500/10"
+            >
+              <Edit3 className="w-4 h-4" /> Edit
+            </button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -153,32 +164,26 @@ export default function DashboardPage() {
         }`}>
           
           <div className="flex flex-col items-center justify-center text-center h-full">
-            
             {isActive ? (
               <ShieldCheck className="w-16 h-16 text-emerald-500 mb-4" strokeWidth={2} />
-            ) : isPending ? (
-              <Clock className="w-16 h-16 text-amber-500 mb-4" strokeWidth={2} />
             ) : (
-              <ShieldAlert className="w-16 h-16 text-rose-500 mb-4" strokeWidth={2} />
+              <ShieldAlert className="w-16 h-16 text-amber-500 mb-4" strokeWidth={2} />
             )}
 
             <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-6 border ${
-              isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30' : 
-              isPending ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30' : 
-              'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
+              isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400' : 
+              'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400'
             }`}>
               {profile?.subscription?.status || 'No Active Plan'}
             </div>
 
             {isPending && (
               <div className="space-y-4 w-full">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200/80">
-                  Your payment is currently under review by our team.
-                </p>
-                <div className="bg-amber-100/50 dark:bg-amber-900/30 p-3 rounded-xl flex items-center justify-between text-left border border-amber-200/50 dark:border-amber-500/20">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 mb-0.5">Transaction ID</p>
-                    <p className="text-sm font-mono font-bold text-amber-900 dark:text-amber-100">{profile?.subscription?.trx_id}</p>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200/80">Your payment is under review.</p>
+                <div className="bg-amber-100/50 p-3 rounded-xl flex items-center justify-between border border-amber-200/50">
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase text-amber-600 mb-0.5">TrxID</p>
+                    <p className="text-sm font-mono font-bold text-amber-900">{profile?.subscription?.trx_id}</p>
                   </div>
                   <CreditCard className="w-5 h-5 text-amber-500" />
                 </div>
@@ -187,15 +192,11 @@ export default function DashboardPage() {
 
             {isActive && (
               <div className="space-y-4 w-full">
-                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200/80">
-                  You have full access to all premium features.
-                </p>
-                <div className="bg-emerald-100/50 dark:bg-emerald-900/30 p-3 rounded-xl flex items-center justify-between text-left border border-emerald-200/50 dark:border-emerald-500/20">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-0.5">Valid Until</p>
-                    <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
-                      {profile?.subscription?.expiry_date ? new Date(profile.subscription.expiry_date).toLocaleDateString() : 'Lifetime Access'}
-                    </p>
+                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200/80">Full premium access activated.</p>
+                <div className="bg-emerald-100/50 p-3 rounded-xl flex items-center justify-between border border-emerald-200/50">
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase text-emerald-600 mb-0.5">Valid Until</p>
+                    <p className="text-sm font-bold text-emerald-900">Lifetime</p>
                   </div>
                   <Calendar className="w-5 h-5 text-emerald-500" />
                 </div>
@@ -203,17 +204,22 @@ export default function DashboardPage() {
             )}
             
             {!isPending && !isActive && (
-              <button 
-                onClick={() => router.push('/checkout')}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-sm active:scale-95"
-              >
-                Upgrade to Premium
-              </button>
+              <button onClick={() => router.push('/checkout')} className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3.5 px-4 rounded-xl mt-4">Upgrade Now</button>
             )}
           </div>
         </div>
 
       </div>
+
+      {/* Profile Edit Modal */}
+      {profile && (
+        <EditProfileModal 
+          isOpen={isEditModalOpen} 
+          onClose={() => setIsEditModalOpen(false)} 
+          currentName={profile.name}
+          onUpdateSuccess={(newName) => setProfile({ ...profile, name: newName })}
+        />
+      )}
     </div>
   );
 }

@@ -7,7 +7,8 @@ from django.shortcuts import redirect, render
 from django.db import transaction
 from django.urls import path
 from django.template.response import TemplateResponse
-from .models import Level, Subject, Chapter, Question, Option
+# UPDATE: BoardPaper মডেলটি import করা হয়েছে
+from .models import Level, Subject, Chapter, Question, Option, BoardPaper
 
 @admin.register(Level)
 class LevelAdmin(admin.ModelAdmin):
@@ -22,9 +23,17 @@ class SubjectAdmin(admin.ModelAdmin):
 
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'subject')
-    list_filter = ('subject', 'subject__level')
+    list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
+    list_filter = ('subject', 'is_free', 'is_special_locked')
     search_fields = ('name',)
+
+# UPDATE: BoardPaper কে Admin প্যানেলে রেজিস্টার করা হলো
+@admin.register(BoardPaper)
+class BoardPaperAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
+    list_filter = ('subject', 'is_free', 'is_special_locked')
+    search_fields = ('name',)
+
 
 class OptionInline(admin.TabularInline):
     model = Option
@@ -34,7 +43,7 @@ class OptionInline(admin.TabularInline):
 class UploadMCQForm(forms.Form):
     level = forms.ModelChoiceField(queryset=Level.objects.all(), required=False, label="Class/Level")
     subject = forms.ModelChoiceField(queryset=Subject.objects.all(), required=False, label="Subject")
-    chapter = forms.ModelChoiceField(queryset=Chapter.objects.all(), required=True, label="Chapter")
+    chapter = forms.ModelChoiceField(queryset=Chapter.objects.all(), required=True, label="Default Chapter (Fallback)")
     json_file = forms.FileField(required=True, label="Select JSON File")
 
     def __init__(self, *args, **kwargs):
@@ -69,7 +78,6 @@ class QuestionAdminForm(forms.ModelForm):
             api_key = os.environ.get('IMGBB_API_KEY')
             url = f"https://api.imgbb.com/1/upload?key={api_key}"
             
-            # The file pointer needs to be at the beginning
             upload_image.file.seek(0)
             response = requests.post(url, files={'image': upload_image.file})
             
@@ -89,7 +97,7 @@ class QuestionAdmin(admin.ModelAdmin):
     form = QuestionAdminForm
     list_display = ('id', 'text_excerpt', 'chapter')
     list_display_links = ('id', 'text_excerpt')
-    list_filter = ('chapter__subject__level', 'chapter__subject', 'chapter')
+    list_filter = ('chapter__subject__level', 'chapter__subject', 'chapter', 'boards')
     search_fields = ('text',)
     inlines = [OptionInline]
     
@@ -104,7 +112,7 @@ class QuestionAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             form = UploadMCQForm(request.POST, request.FILES)
             if form.is_valid():
-                chapter = form.cleaned_data['chapter']
+                default_chapter = form.cleaned_data['chapter']
                 json_file = form.cleaned_data['json_file']
                 try:
                     data = json.load(json_file)
@@ -116,32 +124,48 @@ class QuestionAdmin(admin.ModelAdmin):
 
                     with transaction.atomic():
                         for item in data:
-                            text = item.get('text')
-                            image_url = item.get('image_url')
-                            board_reference = item.get('board_reference')
-                            explanation = item.get('explanation')
-                            options = item.get('options')
+                            # Null handling (যেকোনো ভ্যালু ফাঁকা থাকলে ক্র্যাশ করবে না)
+                            text = item.get('text') or "No Question Text Provided"
+                            image_url = item.get('image_url') or None
+                            board_reference = item.get('board_reference') or None
+                            explanation = item.get('explanation') or None
+                            options = item.get('options') or []
 
-                            if not all([text, options]):
-                                error_count += 1
-                                continue
+                            # ১. Chapter Dynamic Check
+                            chapter_name = item.get('chapter_name')
+                            target_chapter = default_chapter
+                            if chapter_name:
+                                found_chapter = Chapter.objects.filter(name__iexact=chapter_name).first()
+                                if found_chapter:
+                                    target_chapter = found_chapter
 
+                            # Question তৈরি করা
                             question = Question.objects.create(
-                                chapter=chapter,
+                                chapter=target_chapter,
                                 text=text,
                                 image_url=image_url,
                                 board_reference=board_reference,
                                 explanation=explanation
                             )
+                            
+                            # Options তৈরি করা
                             for opt in options:
                                 Option.objects.create(
                                     question=question,
-                                    text=opt.get('text', ''),
-                                    is_correct=opt.get('is_correct', False)
+                                    text=opt.get('text') or 'Empty Option',
+                                    is_correct=bool(opt.get('is_correct', False))
                                 )
+                            
+                            # ২. Board (ManyToMany) Logic
+                            board_names = item.get('boards')
+                            if board_names and isinstance(board_names, list):
+                                found_boards = BoardPaper.objects.filter(name__in=board_names)
+                                if found_boards.exists():
+                                    question.boards.add(*found_boards)
+                            
                             success_count += 1
                         
-                    self.message_user(request, f"Successfully imported {success_count} questions into {chapter.name}. Skipped/Errors: {error_count}", level=messages.SUCCESS)
+                    self.message_user(request, f"Successfully imported {success_count} questions. Errors: {error_count}", level=messages.SUCCESS)
                     return redirect('..')
                 except Exception as e:
                     self.message_user(request, f"Error processing file: {str(e)}", level=messages.ERROR)

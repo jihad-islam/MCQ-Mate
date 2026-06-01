@@ -1,5 +1,10 @@
+'use client';
+
 import { Question } from '@/lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { FormattedMathText } from '../ui/FormattedMathText';
 
 interface QuestionCardProps {
@@ -11,17 +16,35 @@ interface QuestionCardProps {
 }
 
 export default function QuestionCard({ question, currentIndex, totalQuestions, userAnswers, onSelectOption }: QuestionCardProps) {
+  const searchParams = useSearchParams();
+  const chapterIds = searchParams.get('chapterIds') || '';
+  
+  // URL-এ 100000 এর বড় কোনো ID থাকলে বুঝে নেব এটা Board Exam
+  const isBoardExam = chapterIds.split(',').some(id => parseInt(id.trim()) >= 100000);
+
+  // Chapter Name Show/Hide করার State (SessionStorage-এ সেভ থাকবে যেন পরের প্রশ্নে গেলে রিসেট না হয়)
+  const [showChapter, setShowChapter] = useState(false);
+
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('showChapterTag');
+    if (savedState === 'true') {
+      setShowChapter(true);
+    }
+  }, []);
+
+  const toggleChapter = () => {
+    const newState = !showChapter;
+    setShowChapter(newState);
+    sessionStorage.setItem('showChapterTag', String(newState));
+  };
+
   if (!question) return null;
 
   return (
-    /* Tailwind Responsive Magic: 
-      Moblie-এ background transparent, border-b এবং rounded-none থাকবে (Clean Sheet Look)।
-      Desktop (md)-এ এটি সুন্দর rounded-3xl white card এবং shadow-sm বক্সে রূপান্তর হবে।
-    */
     <div className="bg-transparent md:bg-white dark:bg-transparent md:dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800/60 md:border md:border-slate-200 md:dark:border-slate-700 rounded-none md:rounded-3xl p-4 sm:p-6 md:p-8 shadow-none md:shadow-sm transition-colors min-h-0 flex flex-col">
       <div className="mb-6 md:mb-8 flex-shrink-0">
         
-        {/* 1. DESKTOP ONLY: Progress Bar & Status (Hidden on Mobile) */}
+        {/* DESKTOP ONLY: Progress Bar & Status */}
         <div className="hidden md:block">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -40,19 +63,41 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
           </div>
         </div>
 
-        {/* 2. MOBILE ONLY: Minimal Subtle Badge (Hidden on Desktop) */}
+        {/* MOBILE ONLY: Minimal Subtle Badge */}
         <div className="md:hidden flex items-center gap-2 mb-3">
           <span className="text-xs font-black text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/10 px-2.5 py-1 rounded-md tracking-wide uppercase">
             MCQ #{currentIndex + 1}
           </span>
         </div>
 
-        {/* Question Text */}
+        {/* Question Text & Tags */}
         <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-50 leading-relaxed">
           <FormattedMathText text={question.text || ""} />
-          {question.board_reference && (
+          
+          {/* Normal Exam: Show Board Reference */}
+          {!isBoardExam && question.board_reference && (
             <span className="ml-3 inline-block align-middle text-xs font-semibold text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-700/50 px-2.5 py-1 rounded-md">
               {question.board_reference}
+            </span>
+          )}
+
+          {/* Board Exam: Show Chapter Name Toggle */}
+          {isBoardExam && question.chapter_name && (
+            <span 
+              onClick={toggleChapter}
+              className="ml-3 inline-flex items-center gap-1.5 align-middle text-xs font-bold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1.5 rounded-md border border-violet-200 dark:border-violet-500/20 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-all active:scale-95"
+            >
+              {showChapter ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span className="max-w-[150px] truncate">{question.chapter_name}</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5" />
+                  Show Chapter
+                </>
+              )}
             </span>
           )}
         </p>

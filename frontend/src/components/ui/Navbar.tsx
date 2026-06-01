@@ -8,21 +8,38 @@ import { ThemeToggle } from './ThemeToggle';
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string>('Dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    // Auth status চেক করার ফাংশন
+    // Auth status এবং User Name চেক করার ফাংশন
     const checkAuthStatus = () => {
       const token = localStorage.getItem('access_token');
-      setIsLoggedIn(!!token);
+      if (token) {
+        setIsLoggedIn(true);
+        try {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userObj = JSON.parse(userStr);
+            // ইউজারের পুরো নাম থেকে শুধু প্রথম নামটি (First Name) নেওয়া হচ্ছে
+            const firstName = userObj.name?.split(' ')[0] || 'Dashboard';
+            setUserName(firstName);
+          }
+        } catch (e) {
+          setUserName('Dashboard');
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserName('Dashboard');
+      }
     };
 
     // প্রথমবার রেন্ডার হওয়ার সময় চেক করবে
     checkAuthStatus();
 
-    // আমাদের তৈরি করা কাস্টম 'auth-change' ইভেন্টটি লিসেন করবে
+    // কাস্টম 'auth-change' ইভেন্টটি লিসেন করবে
     window.addEventListener('auth-change', checkAuthStatus);
     
     // পেজ চেঞ্জ হলে মোবাইল মেনু বন্ধ করে দেবে
@@ -71,7 +88,7 @@ export default function Navbar() {
                   className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
                 >
                   <User className="w-4 h-4" strokeWidth={2.5} />
-                  Dashboard
+                  <span className="truncate max-w-[100px]">{userName}</span>
                 </Link>
                 <button 
                   onClick={handleLogout}
@@ -122,7 +139,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   <User className="w-5 h-5" />
-                  Dashboard
+                  <span className="truncate">{userName}</span>
                 </Link>
                 <button 
                   onClick={handleLogout}

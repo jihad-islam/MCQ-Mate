@@ -1,4 +1,3 @@
-# backend/users/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Subscription
@@ -33,10 +32,8 @@ class CheckoutSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
-        # Email থেকে username তৈরি করা হচ্ছে
         username = validated_data['email'].split('@')[0]
         
-        # User তৈরি করা
         user = User.objects.create_user(
             username=username,
             email=validated_data['email'],
@@ -45,7 +42,6 @@ class CheckoutSerializer(serializers.Serializer):
             bkash_number=validated_data['bkash_number']
         )
         
-        # Pending subscription তৈরি করা
         Subscription.objects.create(
             user=user,
             trx_id=validated_data['trx_id'],
@@ -53,3 +49,21 @@ class CheckoutSerializer(serializers.Serializer):
         )
         
         return user
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='first_name', required=False)
+    password = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = ['name', 'password']
+
+    def update(self, instance, validated_data):
+        if 'first_name' in validated_data:
+            instance.first_name = validated_data['first_name']
+        
+        if 'password' in validated_data:
+            instance.set_password(validated_data['password'])
+            
+        instance.save()
+        return instance

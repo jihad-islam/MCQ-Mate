@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import CheckoutSerializer
+from .serializers import CheckoutSerializer, UserProfileUpdateSerializer
 
 class CheckoutView(APIView):
     permission_classes = [AllowAny]
@@ -13,7 +13,7 @@ class CheckoutView(APIView):
     def post(self, request):
         serializer = CheckoutSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            serializer.save()
             return Response(
                 {"message": "Account created successfully. Subscription is pending approval."}, 
                 status=status.HTTP_201_CREATED
@@ -32,7 +32,6 @@ class LoginView(APIView):
         if user is not None:
             refresh = RefreshToken.for_user(user)
             
-            # BUG FIX 1: Login এর সময়ও subscription status বের করে আনা হচ্ছে
             try:
                 sub_status = user.subscription.status
             except:
@@ -46,7 +45,6 @@ class LoginView(APIView):
                     'email': user.email,
                     'name': user.first_name,
                     'is_staff': user.is_staff,
-                    # Subscription object frontend এ পাঠানো হচ্ছে
                     'subscription': {
                         'status': sub_status
                     }
@@ -61,6 +59,7 @@ class LoginView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # ইউজারের ডেটা দেখার জন্য (GET)
     def get(self, request):
         user = request.user
         
@@ -86,3 +85,11 @@ class UserProfileView(APIView):
         }
         
         return Response(data, status=status.HTTP_200_OK)
+
+    # ইউজারের ডেটা আপডেট করার জন্য (PUT)
+    def put(self, request):
+        serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Profile updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
