@@ -2,7 +2,6 @@
 
 import ExamConfig from '@/components/selection/ExamConfig';
 import SelectionFlow from '@/components/selection/SelectionFlow';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -45,7 +44,6 @@ export default function Home() {
       return;
     }
 
-    // BUG FIX: নতুন এক্সাম শুরু করার আগে পুরনো এক্সামের রেজাল্ট এবং রিভিউ ডাটা ক্লিয়ার করে দেওয়া হচ্ছে
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('currentExamResult');
       sessionStorage.removeItem('examReview');
@@ -64,16 +62,10 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors">
         <div className="max-w-5xl mx-auto">
-          <div className="flex justify-between items-start mb-6 sm:mb-8">
-            <div />
-            <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
-          </div>
-          <div className="text-center mb-10 sm:mb-16">
-            <a href="/" className="inline-flex items-center justify-center mb-4 cursor-pointer hover:opacity-80 transition-opacity">
-              <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">
-                MCQ<span className="text-violet-600 dark:text-violet-500">Mate</span>
-              </h1>
-            </a>
+          <div className="text-center mb-10 sm:mb-16 mt-4">
+            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3">
+              MCQ<span className="text-violet-600 dark:text-violet-500">Mate</span>
+            </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium text-base sm:text-lg">Your MCQ practice partner.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
@@ -88,20 +80,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors flex flex-col">
       <div className="max-w-5xl mx-auto w-full flex-grow">
-        <div className="flex justify-between items-start mb-8 sm:mb-12">
-          <div />
-          <ThemeToggle />
-        </div>
         
-        <div className="text-center mb-10 sm:mb-16">
-          <a href="/" className="relative inline-flex items-center justify-center mb-3 cursor-pointer hover:opacity-80 transition-opacity group">
+        {/* Clean Header Section without duplicate Navbar elements */}
+        <div className="text-center mb-10 sm:mb-16 mt-4 sm:mt-6">
+          <div className="relative inline-flex items-center justify-center mb-3">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
               MCQ<span className="text-violet-600 dark:text-violet-500">Mate</span>
             </h1>
-            <span className="absolute left-full ml-3 top-0 sm:top-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-[10px] sm:text-xs font-black tracking-wider uppercase border border-violet-200 dark:border-violet-500/20 shadow-sm group-hover:bg-violet-200 dark:group-hover:bg-violet-500/20 transition-colors">
+            <span className="absolute left-full ml-3 top-0 sm:top-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-[10px] sm:text-xs font-black tracking-wider uppercase border border-violet-200 dark:border-violet-500/20 shadow-sm transition-colors">
               v1.0
             </span>
-          </a>
+          </div>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-base sm:text-lg">Your MCQ practice partner.</p>
         </div>
 

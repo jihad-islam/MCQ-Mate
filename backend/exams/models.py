@@ -1,12 +1,11 @@
+# backend/exams/models.py
 from django.db import models
-
 
 class Level(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
-
 
 class Subject(models.Model):
     name = models.CharField(max_length=255)
@@ -15,14 +14,15 @@ class Subject(models.Model):
     def __str__(self):
         return f"{self.name} - {self.level.name}"
 
-
 class Chapter(models.Model):
     name = models.CharField(max_length=255)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='chapters')
+    
+    # Freemium model এর জন্য is_free field add করা হলো
+    is_free = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
-
 
 class Question(models.Model):
     text = models.TextField()
@@ -33,7 +33,6 @@ class Question(models.Model):
 
     def __str__(self):
         return self.text[:50]
-
 
 class Option(models.Model):
     text = models.CharField(max_length=255)

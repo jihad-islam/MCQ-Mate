@@ -1,3 +1,4 @@
+import Navbar from "@/components/ui/Navbar";
 import { Providers } from "@/components/ui/ThemeProvider";
 import 'katex/dist/katex.min.css';
 import type { Metadata } from "next";
@@ -32,6 +33,8 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors">
         <Providers>
+          {/* গ্লোবাল Navbar অ্যাড করা হলো */}
+          <Navbar />
           <main className="flex-grow flex flex-col">
             {children}
           </main>

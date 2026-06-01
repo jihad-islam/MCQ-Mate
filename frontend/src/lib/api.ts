@@ -17,6 +17,7 @@ export interface Chapter {
   name: string;
   subject: number;
   total_mcqs: number;
+  is_free: boolean; // Freemium UI এর জন্য নতুন ফিল্ড add করা হলো
 }
 
 export interface Option {

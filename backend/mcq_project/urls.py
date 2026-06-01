@@ -20,4 +20,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('exams.urls')),
+    
+    # Custom users app (Authentication & Checkout) URLs
+    path('api/users/', include('users.urls')),
 ]
