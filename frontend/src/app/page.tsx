@@ -10,7 +10,6 @@ export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   
-  // Update: Changed from single ID to Array of IDs for multi-select
   const [selectedChapterIds, setSelectedChapterIds] = useState<number[]>([]);
   const [availableMcqs, setAvailableMcqs] = useState<number>(0);
   
@@ -46,7 +45,12 @@ export default function Home() {
       return;
     }
 
-    // Update: Convert array [4,5] to string "4,5" for URL parameter
+    // BUG FIX: নতুন এক্সাম শুরু করার আগে পুরনো এক্সামের রেজাল্ট এবং রিভিউ ডাটা ক্লিয়ার করে দেওয়া হচ্ছে
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('currentExamResult');
+      sessionStorage.removeItem('examReview');
+    }
+
     const searchParams = new URLSearchParams({
       chapterIds: selectedChapterIds.join(','),
       mcqCount: mcqCount.toString(),
@@ -120,7 +124,6 @@ export default function Home() {
               Start Exam
             </button>
 
-            {/* Update: Dynamic text based on how many chapters are selected */}
             {selectedChapterIds.length > 0 && (
               <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-2xl text-center transition-all animate-in fade-in slide-in-from-bottom-2">
                 <p className="text-sm font-bold flex items-center justify-center gap-2">
