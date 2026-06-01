@@ -2,8 +2,8 @@
 
 import { Chapter, fetchChaptersBySubject, fetchLevels, fetchSubjectsByLevel, Level, Subject } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import MultiSelectDropdown from './MultiSelectDropdown';
-import SingleSelectDropdown from './SingleSelectDropdown';
+import MultiSelectDropdown from '../ui/MultiSelectDropdown';
+import SingleSelectDropdown from '../ui/SingleSelectDropdown';
 
 interface SelectionFlowProps {
   onSelectionComplete: (selectedChapterIds: number[], availableMcqs: number) => void;

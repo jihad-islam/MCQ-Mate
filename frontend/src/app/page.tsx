@@ -1,8 +1,8 @@
 'use client';
 
-import ExamConfig from '@/components/ExamConfig';
-import SelectionFlow from '@/components/SelectionFlow';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import ExamConfig from '@/components/selection/ExamConfig';
+import SelectionFlow from '@/components/selection/SelectionFlow';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 

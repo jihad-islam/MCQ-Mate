@@ -1,8 +1,8 @@
 'use client';
 
-import ExamInterface from '@/components/ExamInterface';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import Timer from '@/components/Timer';
+import ExamInterface from '@/components/exam/ExamInterface';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import Timer from '@/components/exam/Timer';
 import { fetchQuestionsByChapter, Question } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';

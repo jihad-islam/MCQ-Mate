@@ -4,9 +4,9 @@ import { useExamShortcuts } from '@/hooks/useExamShortcuts';
 import { ExamResult, Question, submitExam } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import ExamControls from './Exam/ExamControls';
-import QuestionCard from './Exam/QuestionCard';
-import ResultView from './Exam/ResultView';
+import ExamControls from './ExamControls';
+import QuestionCard from './QuestionCard';
+import ResultView from './ResultView';
 
 interface ExamInterfaceProps {
   questions: Question[];

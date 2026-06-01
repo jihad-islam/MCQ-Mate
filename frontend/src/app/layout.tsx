@@ -1,4 +1,4 @@
-import { Providers } from "@/components/ThemeProvider";
+import { Providers } from "@/components/ui/ThemeProvider";
 import 'katex/dist/katex.min.css';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";

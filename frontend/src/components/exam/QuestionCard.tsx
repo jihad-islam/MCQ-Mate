@@ -1,6 +1,6 @@
 import { Question } from '@/lib/api';
 import Image from 'next/image';
-import { FormattedMathText } from '../FormattedMathText';
+import { FormattedMathText } from '../ui/FormattedMathText';
 
 interface QuestionCardProps {
   question: Question;

@@ -2,8 +2,8 @@
 
 import { Question } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import DesktopTimer from './Exam/DesktopTimer';
-import MobileTimer from './Exam/MobileTimer';
+import DesktopTimer from './DesktopTimer';
+import MobileTimer from './MobileTimer';
 
 interface TimerProps {
   timeLimit: number; // in minutes

@@ -1,7 +1,7 @@
 'use client';
 
-import { FormattedMathText } from '@/components/FormattedMathText';
-import PdfDownloadButton from '@/components/PdfDownloadButton';
+import { FormattedMathText } from '@/components/ui/FormattedMathText';
+import PdfDownloadButton from '@/components/ui/PdfDownloadButton';
 import { Question } from '@/lib/api';
 import { ArrowLeft, CheckCircle, Home, Info, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
