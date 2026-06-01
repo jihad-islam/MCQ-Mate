@@ -1,5 +1,7 @@
-# backend/exams/models.py
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class Level(models.Model):
     name = models.CharField(max_length=255)
@@ -17,19 +19,15 @@ class Subject(models.Model):
 class Chapter(models.Model):
     name = models.CharField(max_length=255)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='chapters')
-    
-    # Freemium এবং Special Lock লজিক
     is_free = models.BooleanField(default=False)
-    is_special_locked = models.BooleanField(default=False)  # Admin চাইলে পুরোপুরি হাইড করে রাখতে পারবে
+    is_special_locked = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
 
-# নতুন মডেল: বোর্ড প্রশ্নগুলোকে সুন্দরভাবে অর্গানাইজ করার জন্য
 class BoardPaper(models.Model):
-    name = models.CharField(max_length=255)  # e.g., "Physics Dhaka Board 2025"
+    name = models.CharField(max_length=255)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='board_papers')
-    
     is_free = models.BooleanField(default=False)
     is_special_locked = models.BooleanField(default=False)
 
@@ -39,16 +37,9 @@ class BoardPaper(models.Model):
 class Question(models.Model):
     text = models.TextField()
     image_url = models.URLField(blank=True, null=True)
-    
-    # এই ফিল্ডটি ফ্রন্টএন্ডে নরমাল এক্সামের সময় ট্যাগ হিসেবে দেখাবে (e.g., "DB 25, DU 19-20")
     board_reference = models.CharField(max_length=255, blank=True, null=True)
-    
     explanation = models.TextField(blank=True, null=True)
-    
-    # একটি প্রশ্ন কোন চ্যাপ্টারের
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions')
-    
-    # একটি প্রশ্ন কোন কোন বোর্ডের (একাধিক বোর্ড হতে পারে, তাই ManyToMany)
     boards = models.ManyToManyField(BoardPaper, related_name='questions', blank=True)
 
     def __str__(self):
@@ -61,3 +52,49 @@ class Option(models.Model):
 
     def __str__(self):
         return f"{self.text} {'(Correct)' if self.is_correct else ''}"
+
+
+# ==========================================
+# PHASE 4: TRACKING & FEEDBACK MODELS
+# ==========================================
+
+class ExamHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exam_histories')
+    score = models.FloatField()
+    total_questions = models.IntegerField()
+    correct_answers = models.IntegerField()
+    wrong_answers = models.IntegerField()
+    # Lightweight storage for tracking mistakes without overloading DB rows
+    wrong_question_ids = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.first_name} - {self.score}%"
+
+class Bookmark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'question') # একজন ইউজার একটি প্রশ্ন একবারই বুকমার্ক করতে পারবে
+
+    def __str__(self):
+        return f"Bookmark by {self.user.first_name}"
+
+class QuestionFeedback(models.Model):
+    ISSUE_CHOICES = (
+        ('wrong_option', 'Wrong Options'),
+        ('typo', 'Typo or Spelling Error'),
+        ('unclear', 'Question is Unclear'),
+        ('other', 'Other'),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='feedbacks')
+    issue_type = models.CharField(max_length=20, choices=ISSUE_CHOICES)
+    message = models.TextField(blank=True, null=True)
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.issue_type} - {self.question.id}"

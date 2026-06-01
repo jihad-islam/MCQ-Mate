@@ -100,3 +100,77 @@ export async function submitExam(payload: ExamSubmitPayload): Promise<ExamResult
   if (!response.ok) throw new Error('Failed to submit exam');
   return response.json();
 }
+
+// ==========================================
+// PHASE 4: TRACKING & FEEDBACK APIs
+// ==========================================
+
+export interface ExamHistoryStats {
+  avg_score: number;
+  total_exams: number;
+  total_questions: number;
+}
+
+export interface ExamHistoryItem {
+  id: number;
+  score: number;
+  total_questions: number;
+  correct_answers: number;
+  wrong_answers: number;
+  wrong_question_ids: number[];
+  created_at: string;
+}
+
+export interface BookmarkItem {
+  id: number;
+  question: Question;
+  created_at: string;
+}
+
+// History Fetch API
+export async function fetchUserHistory(token: string): Promise<{ stats: ExamHistoryStats, history: ExamHistoryItem[] }> {
+  const response = await fetch(`${API_BASE_URL}/history/`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+  if (!response.ok) throw new Error('Failed to fetch history');
+  return response.json();
+}
+
+// Bookmarks Fetch API
+export async function fetchBookmarks(token: string): Promise<BookmarkItem[]> {
+  const response = await fetch(`${API_BASE_URL}/bookmarks/`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+  if (!response.ok) throw new Error('Failed to fetch bookmarks');
+  return response.json();
+}
+
+// Toggle Bookmark API
+export async function toggleBookmark(token: string, questionId: number): Promise<{ message: string, is_bookmarked: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/bookmarks/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ question_id: questionId })
+  });
+  if (!response.ok) throw new Error('Failed to toggle bookmark');
+  return response.json();
+}
+
+// Submit Feedback API
+export async function submitFeedback(token: string, payload: { question: number, issue_type: string, message?: string }): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/feedback/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error('Failed to submit feedback');
+  return response.json();
+}

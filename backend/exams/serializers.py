@@ -1,15 +1,14 @@
-# backend/exams/serializers.py
 from rest_framework import serializers
-from .models import Level, Subject, Chapter, Question, Option, BoardPaper
+from .models import Level, Subject, Chapter, Question, Option, BoardPaper, ExamHistory, Bookmark, QuestionFeedback
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        fields = ['id', 'text']  # SECURITY: Removed 'is_correct' to prevent frontend cheating
+        fields = ['id', 'text'] 
 
 class QuestionSerializer(serializers.ModelSerializer):
     options = OptionSerializer(many=True, read_only=True)
-    chapter_name = serializers.CharField(source='chapter.name', read_only=True) # UI-তে চ্যাপ্টার টগল করার জন্য
+    chapter_name = serializers.CharField(source='chapter.name', read_only=True) 
 
     class Meta:
         model = Question
@@ -31,3 +30,24 @@ class LevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Level
         fields = ['id', 'name']
+
+# ==========================================
+# PHASE 4: TRACKING & FEEDBACK SERIALIZERS
+# ==========================================
+
+class ExamHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamHistory
+        fields = ['id', 'score', 'total_questions', 'correct_answers', 'wrong_answers', 'wrong_question_ids', 'created_at']
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+    
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'question', 'created_at']
+
+class QuestionFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionFeedback
+        fields = ['question', 'issue_type', 'message']
