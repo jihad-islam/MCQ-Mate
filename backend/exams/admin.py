@@ -1,14 +1,14 @@
-import os
 import json
-import requests
-from django import forms
 from django.contrib import admin, messages
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.db import transaction
 from django.urls import path
 from django.template.response import TemplateResponse
-# UPDATE: BoardPaper মডেলটি import করা হয়েছে
+
+# Models Import
 from .models import Level, Subject, Chapter, Question, Option, BoardPaper
+# Forms Import (যেটা আমরা একটু আগে তৈরি করেছি)
+from .forms import UploadMCQForm, QuestionAdminForm
 
 @admin.register(Level)
 class LevelAdmin(admin.ModelAdmin):
@@ -27,7 +27,6 @@ class ChapterAdmin(admin.ModelAdmin):
     list_filter = ('subject', 'is_free', 'is_special_locked')
     search_fields = ('name',)
 
-# UPDATE: BoardPaper কে Admin প্যানেলে রেজিস্টার করা হলো
 @admin.register(BoardPaper)
 class BoardPaperAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
@@ -39,57 +38,6 @@ class OptionInline(admin.TabularInline):
     model = Option
     extra = 4
     max_num = 4
-
-class UploadMCQForm(forms.Form):
-    level = forms.ModelChoiceField(queryset=Level.objects.all(), required=False, label="Class/Level")
-    subject = forms.ModelChoiceField(queryset=Subject.objects.all(), required=False, label="Subject")
-    chapter = forms.ModelChoiceField(queryset=Chapter.objects.all(), required=True, label="Default Chapter (Fallback)")
-    json_file = forms.FileField(required=True, label="Select JSON File")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'level' in self.data:
-            try:
-                level_id = int(self.data.get('level'))
-                self.fields['subject'].queryset = Subject.objects.filter(level_id=level_id)
-            except (ValueError, TypeError):
-                pass
-        
-        if 'subject' in self.data:
-            try:
-                subject_id = int(self.data.get('subject'))
-                self.fields['chapter'].queryset = Chapter.objects.filter(subject_id=subject_id)
-            except (ValueError, TypeError):
-                pass
-
-
-class QuestionAdminForm(forms.ModelForm):
-    upload_image = forms.ImageField(required=False, label="Upload Image (Auto-generates URL)")
-
-    class Meta:
-        model = Question
-        fields = '__all__'
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        upload_image = self.cleaned_data.get('upload_image')
-
-        if upload_image:
-            api_key = os.environ.get('IMGBB_API_KEY')
-            url = f"https://api.imgbb.com/1/upload?key={api_key}"
-            
-            upload_image.file.seek(0)
-            response = requests.post(url, files={'image': upload_image.file})
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'data' in data and 'url' in data['data']:
-                    instance.image_url = data['data']['url']
-
-        if commit:
-            instance.save()
-            self.save_m2m()
-        return instance
 
 
 @admin.register(Question)
@@ -112,63 +60,103 @@ class QuestionAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             form = UploadMCQForm(request.POST, request.FILES)
             if form.is_valid():
-                default_chapter = form.cleaned_data['chapter']
+                default_chapter = form.cleaned_data.get('chapter')
+                form_board = form.cleaned_data.get('board')
+                subject = form.cleaned_data.get('subject')
                 json_file = form.cleaned_data['json_file']
+                
                 try:
                     data = json.load(json_file)
                     if not isinstance(data, list):
                         raise ValueError("JSON must be a list of expected objects.")
 
                     success_count = 0
-                    error_count = 0
+                    merged_count = 0
 
                     with transaction.atomic():
                         for item in data:
-                            # Null handling (যেকোনো ভ্যালু ফাঁকা থাকলে ক্র্যাশ করবে না)
-                            text = item.get('text') or "No Question Text Provided"
+                            raw_text = item.get('text') or "No Question Text Provided"
+                            clean_text = raw_text.strip()
+                            
                             image_url = item.get('image_url') or None
                             board_reference = item.get('board_reference') or None
                             explanation = item.get('explanation') or None
                             options = item.get('options') or []
 
-                            # ১. Chapter Dynamic Check
+                            # ১. Chapter Dynamic Check & Auto-Creation
                             chapter_name = item.get('chapter_name')
                             target_chapter = default_chapter
-                            if chapter_name:
-                                found_chapter = Chapter.objects.filter(name__iexact=chapter_name).first()
-                                if found_chapter:
-                                    target_chapter = found_chapter
 
-                            # Question তৈরি করা
-                            question = Question.objects.create(
-                                chapter=target_chapter,
-                                text=text,
-                                image_url=image_url,
-                                board_reference=board_reference,
-                                explanation=explanation
-                            )
+                            if chapter_name:
+                                if subject:
+                                    # যদি ফর্মে Subject সিলেক্ট করা থাকে, তবে ওই Subject-এর আন্ডারে চ্যাপ্টার খুঁজবে বা বানাবে
+                                    found_chapter, _ = Chapter.objects.get_or_create(name=chapter_name, subject=subject)
+                                    target_chapter = found_chapter
+                                else:
+                                    # Subject না থাকলে ডাটাবেজে গ্লোবালি খুঁজবে
+                                    found_chapter = Chapter.objects.filter(name__iexact=chapter_name).first()
+                                    if found_chapter:
+                                        target_chapter = found_chapter
                             
-                            # Options তৈরি করা
-                            for opt in options:
-                                Option.objects.create(
-                                    question=question,
-                                    text=opt.get('text') or 'Empty Option',
-                                    is_correct=bool(opt.get('is_correct', False))
+                            # ২. Board Logic (Form Selection + JSON Data)
+                            boards_to_add = set()
+                            
+                            # ফর্ম থেকে সিলেক্ট করা বোর্ড অ্যাড করা
+                            if form_board:
+                                boards_to_add.add(form_board)
+                            
+                            # JSON ফাইলের ভেতর থাকা বোর্ড অ্যাড করা
+                            json_boards = item.get('boards')
+                            if json_boards and isinstance(json_boards, list):
+                                found_boards = BoardPaper.objects.filter(name__in=json_boards)
+                                boards_to_add.update(found_boards)
+
+                            # ৩. Auto-Merge (Deduplication) Logic
+                            existing_question = Question.objects.filter(text__iexact=clean_text).first()
+                            
+                            if existing_question:
+                                # প্রশ্নটি আগে থেকেই আছে, তাই Merge করবো
+                                if boards_to_add:
+                                    existing_question.boards.add(*boards_to_add)
+                                
+                                # যদি আগের প্রশ্নে চ্যাপ্টার না থাকে, কিন্তু এখন পাওয়া যায়, তবে আপডেট করে দেব
+                                if target_chapter and not existing_question.chapter:
+                                    existing_question.chapter = target_chapter
+                                    existing_question.save()
+                                
+                                merged_count += 1
+                            else:
+                                # প্রশ্নটি নতুন, তাই ক্রিয়েট করবো
+                                question = Question.objects.create(
+                                    chapter=target_chapter,
+                                    text=clean_text,
+                                    image_url=image_url,
+                                    board_reference=board_reference,
+                                    explanation=explanation
                                 )
-                            
-                            # ২. Board (ManyToMany) Logic
-                            board_names = item.get('boards')
-                            if board_names and isinstance(board_names, list):
-                                found_boards = BoardPaper.objects.filter(name__in=board_names)
-                                if found_boards.exists():
-                                    question.boards.add(*found_boards)
-                            
-                            success_count += 1
+                                
+                                # Options তৈরি করা
+                                for opt in options:
+                                    Option.objects.create(
+                                        question=question,
+                                        text=opt.get('text') or 'Empty Option',
+                                        is_correct=bool(opt.get('is_correct', False))
+                                    )
+                                
+                                # ফাইনালি নতুন প্রশ্নকে বোর্ডের সাথে লিঙ্ক করা
+                                if boards_to_add:
+                                    question.boards.add(*boards_to_add)
+                                
+                                success_count += 1
                         
-                    self.message_user(request, f"Successfully imported {success_count} questions. Errors: {error_count}", level=messages.SUCCESS)
+                    self.message_user(
+                        request, 
+                        f"Success! Uploaded {success_count} new questions. Merged {merged_count} existing questions.", 
+                        level=messages.SUCCESS
+                    )
                     return redirect('..')
                 except Exception as e:
-                    self.message_user(request, f"Error processing file: {str(e)}", level=messages.ERROR)
+                    self.message_user(request, f"Error processing JSON: {str(e)}", level=messages.ERROR)
         else:
             form = UploadMCQForm()
 
@@ -183,6 +171,7 @@ class QuestionAdmin(admin.ModelAdmin):
     def text_excerpt(self, obj):
         return obj.text[:75] + '...' if len(obj.text) > 75 else obj.text
     text_excerpt.short_description = 'Question Text'
+
 
 @admin.register(Option)
 class OptionAdmin(admin.ModelAdmin):
