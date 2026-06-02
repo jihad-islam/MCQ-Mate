@@ -112,15 +112,6 @@ export default function Home() {
             >
               Start Exam
             </button>
-
-            {selectedChapterIds.length > 0 && (
-              <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-2xl text-center transition-all animate-in fade-in slide-in-from-bottom-2">
-                <p className="text-sm font-bold flex items-center justify-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
-                  {selectedChapterIds.length} {selectedChapterIds.length > 1 ? 'Chapters' : 'Chapter'} selected & ready
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
