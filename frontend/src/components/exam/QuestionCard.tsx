@@ -1,10 +1,10 @@
 'use client';
 
 import { Question, submitFeedback, toggleBookmark } from '@/lib/api';
-import { AlertTriangle, Bookmark, Eye, EyeOff, X } from 'lucide-react';
+import { AlertTriangle, Bookmark, Eye, EyeOff, Info, X } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormattedMathText } from '../ui/FormattedMathText';
 
 interface QuestionCardProps {
@@ -22,19 +22,34 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
 
   const [showChapter, setShowChapter] = useState(false);
   
-  // States for Bookmark & Report
+  // States for Bookmark, Report & Dropdown
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   const [reportIssueType, setReportIssueType] = useState('wrong_option');
   const [reportMessage, setReportMessage] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedState = sessionStorage.getItem('showChapterTag');
     if (savedState === 'true') {
       setShowChapter(true);
     }
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const toggleChapter = () => {
@@ -44,17 +59,22 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
   };
 
   const handleToggleBookmark = async () => {
+    setIsDropdownOpen(false); // Close dropdown
     try {
       const token = localStorage.getItem('access_token');
-      if (!token) return; // User not logged in, silently ignore or show toast
+      if (!token) return;
       
-      // Optimistic UI update
       setIsBookmarked(!isBookmarked);
       await toggleBookmark(token, question.id);
     } catch (error) {
       console.error("Failed to bookmark", error);
-      setIsBookmarked(!isBookmarked); // Revert on failure
+      setIsBookmarked(!isBookmarked);
     }
+  };
+
+  const handleOpenReportModal = () => {
+    setIsDropdownOpen(false); // Close dropdown
+    setIsReportModalOpen(true);
   };
 
   const handleReportSubmit = async () => {
@@ -83,23 +103,40 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
 
   if (!question) return null;
 
-  // Action Buttons Component (To keep code DRY and clean)
-  const ActionButtons = () => (
-    <div className="flex items-center gap-3">
+  // Reusable Dropdown Component
+  const OptionsDropdown = () => (
+    <div className="relative" ref={dropdownRef}>
       <button 
-        onClick={handleToggleBookmark}
-        className="text-slate-400 hover:text-violet-500 transition-colors tooltip-trigger"
-        title="Bookmark Question"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className={`p-1.5 rounded-full transition-all duration-200 ${
+          isDropdownOpen 
+            ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400' 
+            : 'text-violet-600/40 dark:text-violet-400/40 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-400'
+        }`}
+        title="More Options"
       >
-        <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-violet-500 text-violet-500' : ''}`} />
+        <Info className="w-5 h-5 sm:w-5 sm:h-5" strokeWidth={2.5} />
       </button>
-      <button 
-        onClick={() => setIsReportModalOpen(true)}
-        className="text-slate-400 hover:text-rose-500 transition-colors tooltip-trigger"
-        title="Report Error"
-      >
-        <AlertTriangle className="w-5 h-5" />
-      </button>
+
+      {/* Popover Menu */}
+      {isDropdownOpen && (
+        <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+          <button 
+            onClick={handleToggleBookmark}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-violet-500 text-violet-500' : 'text-slate-400'}`} />
+            {isBookmarked ? 'Saved' : 'Save'}
+          </button>
+          <button 
+            onClick={handleOpenReportModal}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Report Issue
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -115,11 +152,12 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
                 Question {currentIndex + 1} of {totalQuestions}
               </h3>
               
-              <div className="flex items-center gap-5">
-                <ActionButtons />
-                <div className="text-sm font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 px-3 py-1 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div className="text-sm font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-lg">
                   {Object.keys(userAnswers).length} Answered
                 </div>
+                {/* Desktop Dropdown Position */}
+                <OptionsDropdown />
               </div>
             </div>
             
@@ -132,11 +170,12 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
           </div>
 
           {/* MOBILE ONLY: Header */}
-          <div className="md:hidden flex items-center justify-between gap-2 mb-3">
-            <span className="text-xs font-black text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/10 px-2.5 py-1 rounded-md tracking-wide uppercase">
+          <div className="md:hidden flex items-center justify-between mb-3">
+            <span className="text-xs font-black text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/10 px-2.5 py-1.5 rounded-md tracking-wide uppercase">
               MCQ #{currentIndex + 1}
             </span>
-            <ActionButtons />
+            {/* Mobile Dropdown Position - Moved to the extreme right */}
+            <OptionsDropdown />
           </div>
 
           {/* Question Text & Tags */}
