@@ -31,7 +31,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors">
+      <body className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors overflow-y-scroll">
         <Providers>
           {/* গ্লোবাল Navbar অ্যাড করা হলো */}
           <Navbar />

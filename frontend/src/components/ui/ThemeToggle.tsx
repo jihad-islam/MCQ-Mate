@@ -2,21 +2,15 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme, systemTheme } = useTheme();
-  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (pathname !== '/') {
-    return null;
-  }
 
   if (!mounted) {
     return <div className="w-14 h-8" />;

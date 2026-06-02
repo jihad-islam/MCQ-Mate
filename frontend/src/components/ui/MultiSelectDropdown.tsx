@@ -82,14 +82,14 @@ export default function MultiSelectDropdown({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between px-5 py-4 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl text-sm font-semibold transition-all ${
+        className={`w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl text-sm font-semibold transition-all overflow-hidden ${
           disabled 
             ? 'opacity-60 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-400' 
             : 'cursor-pointer border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50 hover:border-violet-300 dark:hover:border-violet-700 focus:outline-none focus:border-violet-500 dark:focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10'
         } ${isOpen ? 'border-violet-500 dark:border-violet-500 ring-4 ring-violet-500/10' : ''}`}
       >
-        <span className="truncate pr-4">{displayText}</span>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="truncate flex-1 min-w-0 text-left pr-4">{displayText}</span>
+        <ChevronDown className={`w-4 h-4 flex-shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}

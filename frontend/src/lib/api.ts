@@ -90,12 +90,23 @@ export async function fetchQuestionsByChapter(chapterIds: string, limit?: number
   return (data && data.results) ? data.results : data;
 }
 
-export async function submitExam(payload: ExamSubmitPayload): Promise<ExamResult> {
+export async function submitExam(payload: ExamSubmitPayload, token?: string | null): Promise<ExamResult> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  } else if (typeof window !== 'undefined') {
+    const localToken = localStorage.getItem('access_token');
+    if (localToken) {
+      headers['Authorization'] = `Bearer ${localToken}`;
+    }
+  }
+
   const response = await fetch(`${API_BASE_URL}/submit-exam/`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(payload),
   });
   

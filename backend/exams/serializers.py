@@ -40,8 +40,21 @@ class ExamHistorySerializer(serializers.ModelSerializer):
         model = ExamHistory
         fields = ['id', 'score', 'total_questions', 'correct_answers', 'wrong_answers', 'wrong_question_ids', 'created_at']
 
+class BookmarkOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        fields = ['id', 'text', 'is_correct']
+
+class BookmarkQuestionSerializer(serializers.ModelSerializer):
+    options = BookmarkOptionSerializer(many=True, read_only=True)
+    chapter_name = serializers.CharField(source='chapter.name', read_only=True)
+
+    class Meta:
+        model = Question
+        fields = ['id', 'text', 'image_url', 'board_reference', 'chapter', 'chapter_name', 'explanation', 'options']
+
 class BookmarkSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=True)
+    question = BookmarkQuestionSerializer(read_only=True)
     
     class Meta:
         model = Bookmark
