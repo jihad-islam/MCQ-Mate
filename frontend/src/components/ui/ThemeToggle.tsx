@@ -2,15 +2,30 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation'; // <-- Import added
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme, systemTheme } = useTheme();
+  
+  // কারেন্ট পেজের URL পাওয়ার জন্য usePathname ব্যবহার করছি
+  const pathname = usePathname(); 
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // যেসব পেজে থিম টগল বাটন দেখাতে চাও না, সেগুলোর নাম এখানে দাও
+  const hiddenRoutes = ['/exam', '/result', '/review'];
+  
+  // চেক করছি বর্তমান URL-টা hiddenRoutes-এর কোনোটার সাথে মিলে কি না
+  const isHidden = hiddenRoutes.some(route => pathname?.startsWith(route));
+
+  // যদি ওই পেজগুলোতে থাকে, তবে কিছুই রিটার্ন করবে না (Hide হয়ে যাবে)
+  if (isHidden) {
+    return null;
+  }
 
   if (!mounted) {
     return <div className="w-14 h-8" />;
