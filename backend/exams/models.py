@@ -39,7 +39,8 @@ class Question(models.Model):
     image_url = models.URLField(blank=True, null=True)
     board_reference = models.CharField(max_length=255, blank=True, null=True)
     explanation = models.TextField(blank=True, null=True)
-    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions')
+    # chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions')
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions', null=True, blank=True)
     boards = models.ManyToManyField(BoardPaper, related_name='questions', blank=True)
 
     def __str__(self):

@@ -28,9 +28,16 @@
                 </div>
                 <div class="form-row">
                     {{ form.chapter.errors }}
-                    <label for="{{ form.chapter.id_for_label }}" class="required">{{ form.chapter.label }}:</label>
+                    <label for="{{ form.chapter.id_for_label }}">{{ form.chapter.label }}:</label>
                     {{ form.chapter }}
                 </div>
+                
+                <div class="form-row">
+                    {{ form.board.errors }}
+                    <label for="{{ form.board.id_for_label }}">{{ form.board.label }}:</label>
+                    {{ form.board }}
+                </div>
+
                 <div class="form-row">
                     {{ form.json_file.errors }}
                     <label for="{{ form.json_file.id_for_label }}" class="required">{{ form.json_file.label }}:</label>
@@ -47,14 +54,20 @@
     <div style="flex: 1; min-width: 300px; background: #eef2f5; padding: 20px; border-radius: 8px; border: 1px solid #d1d5db; color: #333;">
         <h3 style="margin-top: 0; color: #000;">Expected JSON Format</h3>
         <p>The JSON file must be an array of objects. Each object should define a question with its text, optional explanation, and a list of options.</p>
-        <p>Since the Chapter is selected from the dropdown above, you do NOT need to include it in the JSON file.</p>
+        
+        <p style="background: #e0e7ff; padding: 10px; border-left: 4px solid #6366f1; border-radius: 4px; font-size: 13px;">
+            <strong>💡 Pro Tips for Uploading:</strong><br>
+            - <strong>Chapter:</strong> System will auto-read <code>chapter_name</code> from the JSON. If missing, it uses the "Default Chapter" selected above.<br>
+            - <strong>Board:</strong> You can select a Board from the dropdown to apply it to ALL questions in the file, OR include it in the JSON <code>boards</code> array.
+        </p>
+        
         <pre style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px;">
 [
   {
     "text": "$x = \\sqrt{15}$",
     "image_url": "",
     "board_reference": "Dhaka Board 21",
-    "chapter_name": "Chapter 3: Dynamics",
+    "chapter_name": "",
     "boards": ["Dhaka Board 2025"],
     "explanation": "Solve for x",
     "options": [
@@ -70,23 +83,15 @@
 </div>
 
 <script>
-    // A very simple snippet to help re-submit on change so the form re-renders
-    // with the right subject/chapter options in standard django workflow.
     document.addEventListener("DOMContentLoaded", function() {
         const levelSelect = document.getElementById("id_level");
         const subjectSelect = document.getElementById("id_subject");
 
         if (levelSelect) {
             levelSelect.addEventListener("change", function() {
-                // To keep it simple without AJAX API route, just submit the form via GET
-                // to reload the queryset, or let Django form handle it.
-                // Wait, a POST with missing file shows errors, a GET drops it.
-                // We'll just leave it allowing the user to select them directly if they just submit or handle via JS.
-                // Actually, since I did `queryset=Subject.objects.none()` initially... wait!
-                // If I made it Subject.objects.none(), it's empty initially. Let me change it to `all()` in the Form init so it works without JS, or build a quick fetch.
+                // Future AJAX logic can go here to filter subjects based on class/level
             });
         }
     });
 </script>
 {% endblock %}
-
