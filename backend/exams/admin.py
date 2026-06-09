@@ -7,7 +7,7 @@ from django.template.response import TemplateResponse
 
 # Models Import
 from .models import Level, Subject, Chapter, Question, Option, BoardPaper
-# Forms Import (যেটা আমরা একটু আগে তৈরি করেছি)
+# Forms Import
 from .forms import UploadMCQForm, QuestionAdminForm
 
 @admin.register(Level)
@@ -43,10 +43,10 @@ class OptionInline(admin.TabularInline):
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     form = QuestionAdminForm
-    list_display = ('id', 'text_excerpt', 'chapter')
+    list_display = ('id', 'text_excerpt', 'chapter', 'group_id')
     list_display_links = ('id', 'text_excerpt')
     list_filter = ('chapter__subject__level', 'chapter__subject', 'chapter', 'boards')
-    search_fields = ('text',)
+    search_fields = ('text', 'group_id')
     inlines = [OptionInline]
     
     def get_urls(self):
@@ -81,6 +81,10 @@ class QuestionAdmin(admin.ModelAdmin):
                             image_url = item.get('image_url') or None
                             board_reference = item.get('board_reference') or None
                             explanation = item.get('explanation') or None
+                            
+                            # NEW: JSON থেকে group_id রিড করা
+                            group_id = item.get('group_id') or None
+                            
                             options = item.get('options') or []
 
                             # ১. Chapter Dynamic Check & Auto-Creation
@@ -119,20 +123,25 @@ class QuestionAdmin(admin.ModelAdmin):
                                 if boards_to_add:
                                     existing_question.boards.add(*boards_to_add)
                                 
-                                # যদি আগের প্রশ্নে চ্যাপ্টার না থাকে, কিন্তু এখন পাওয়া যায়, তবে আপডেট করে দেব
+                                # যদি আগের প্রশ্নে চ্যাপ্টার না থাকে, কিন্তু এখন পাওয়া যায়, তবে আপডেট করে দেব
                                 if target_chapter and not existing_question.chapter:
                                     existing_question.chapter = target_chapter
-                                    existing_question.save()
-                                
+                                    
+                                # NEW: আগের প্রশ্নে group_id না থাকলে আপডেট করা
+                                if group_id and not existing_question.group_id:
+                                    existing_question.group_id = group_id
+                                    
+                                existing_question.save()
                                 merged_count += 1
                             else:
-                                # প্রশ্নটি নতুন, তাই ক্রিয়েট করবো
+                                # প্রশ্নটি নতুন, তাই ক্রিয়েট করবো (group_id সহ)
                                 question = Question.objects.create(
                                     chapter=target_chapter,
                                     text=clean_text,
                                     image_url=image_url,
                                     board_reference=board_reference,
-                                    explanation=explanation
+                                    explanation=explanation,
+                                    group_id=group_id  # NEW: ডাটাবেজে সেভ করা
                                 )
                                 
                                 # Options তৈরি করা

@@ -6,6 +6,7 @@ MCQMate is a full-stack SaaS application that functions as an MCQ (Multiple Choi
 ## Application State
 Currently, the application includes the following features:
 - **Authentication & Profiles:** User authentication and profile management via the `users` app.
+- **Premium Subscription & Checkout:** Checkout flow for users to get premium access.
 - **User Dashboard:** A comprehensive dashboard (`/dashboard`) allowing users to review their profile, subscription status, Exam History, and Bookmarks.
 - **Exam Configuration:** Users select levels, subjects, and chapters, and specify the question limit and timer.
 - **Dynamic Exam Generation:** Fetches questions for the selected chapters from the backend API.
@@ -29,6 +30,7 @@ mcq/
 │   ├── users/                # New User App for Authentication & Profiles
 │   │   ├── models.py         # Custom user model
 │   │   ├── views.py          # Auth and profile APIs
+│   ├── staticfiles/          # Collected static assets
 │   ├── mcq_project/          # Main Django configurations (settings, wsgi, asgi)
 │   ├── .env                  # Environment Variables
 │   ├── build.sh              # Build script for deployment
@@ -38,18 +40,20 @@ mcq/
 │   ├── public/               # Public assets
 │   ├── src/
 │   │   ├── app/              # App Router Pages
-│   │   │   ├── exam/page.tsx # Renders `ExamInterface` 
-│   │   │   ├── review/page.tsx # Displays results/reviews after test
+│   │   │   ├── checkout/     # Checkout and premium subscription flow
 │   │   │   ├── dashboard/    # User dashboard for overview, history, and bookmarks
+│   │   │   ├── exam/page.tsx # Renders `ExamInterface` 
 │   │   │   ├── login/        # Authentication pages
+│   │   │   ├── review/page.tsx # Displays results/reviews after test
 │   │   │   ├── globals.css   # Main CSS & Tailwind imports
 │   │   │   ├── layout.tsx    # Root layout container
 │   │   │   ├── page.tsx      # Entry flow (Level/Subject selection & Config)
 │   │   ├── components/       # Reusable components
+│   │   │   ├── config/       # Configuration flow components
 │   │   │   ├── dashboard/    # Dashboard tabs (Overview, BookmarksTab, ExamHistoryTab)
-│   │   │   ├── exam/         # Components specific to the real-time exam (e.g., Timer, DesktopTimer, QuestionCard, ExamInterface, ResultView)
+│   │   │   ├── exam/         # Components specific to the real-time exam (e.g., Timer, DesktopTimer, MobileTimer, QuestionCard, ExamInterface, ResultView)
 │   │   │   ├── selection/    # Flow components for intro page (SelectionFlow, ExamConfig)
-│   │   │   ├── ui/           # Generic components (PdfDownloadButton, ThemeToggle, MultiSelectDropdown)
+│   │   │   ├── ui/           # Generic components (PdfDownloadButton, ThemeToggle, MultiSelectDropdown, Navbar, FormattedMathText, EditProfileModal, PremiumModal, etc.)
 │   │   ├── hooks/            
 │   │   │   ├── useExamShortcuts.tsx # Keyboard navigation mapping
 │   │   ├── lib/              
