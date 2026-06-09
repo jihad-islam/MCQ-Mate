@@ -14,7 +14,8 @@ export default function ExamConfig({ onConfigUpdate, isDisabled, availableMcqs }
   const [timeLimit, setTimeLimit] = useState<number | ''>(''); 
 
   useEffect(() => {
-    setMounted(true);
+    const frameId = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   const handleMcqChange = (e: React.ChangeEvent<HTMLInputElement>) => {

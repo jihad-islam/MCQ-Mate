@@ -26,7 +26,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
   const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frameId = window.requestAnimationFrame(() => setMounted(true));
 
     // ইউজারের সাবস্ক্রিপশন স্ট্যাটাস চেক করার ফাংশন
     const checkPremiumStatus = () => {
@@ -40,7 +40,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
         } else {
           setIsPremium(false);
         }
-      } catch (e) {
+      } catch {
         setIsPremium(false);
       }
     };
@@ -51,6 +51,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
     window.addEventListener('auth-change', checkPremiumStatus);
 
     return () => {
+      window.cancelAnimationFrame(frameId);
       window.removeEventListener('auth-change', checkPremiumStatus);
     };
   }, []);
@@ -62,7 +63,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
       try {
         const data = await fetchLevels();
         setLevels(data);
-      } catch (err) {
+      } catch {
         setError('Failed to load classes');
       }
     };
@@ -72,9 +73,6 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
   // Fetch subjects when level changes
   useEffect(() => {
     if (selectedLevel === '') {
-      setSubjects([]); setSelectedSubject('');
-      setChapters([]); setSelectedChapters([]);
-      onSelectionComplete([], 0);
       return;
     }
     const loadSubjects = async () => {
@@ -84,7 +82,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
         setSelectedSubject('');
         setChapters([]); setSelectedChapters([]);
         onSelectionComplete([], 0);
-      } catch (err) {
+      } catch {
         setError('Failed to load subjects');
       }
     };
@@ -95,8 +93,6 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
   // Fetch chapters when subject changes
   useEffect(() => {
     if (selectedSubject === '') {
-      setChapters([]); setSelectedChapters([]);
-      onSelectionComplete([], 0);
       return;
     }
     const loadChapters = async () => {
@@ -105,13 +101,29 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
         setChapters(data);
         setSelectedChapters([]);
         onSelectionComplete([], 0);
-      } catch (err) {
+      } catch {
         setError('Failed to load chapters');
       }
     };
     loadChapters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject]);
+
+  const handleLevelChange = (value: number | '') => {
+    setSelectedLevel(value);
+    setSubjects([]);
+    setSelectedSubject('');
+    setChapters([]);
+    setSelectedChapters([]);
+    onSelectionComplete([], 0);
+  };
+
+  const handleSubjectChange = (value: number | '') => {
+    setSelectedSubject(value);
+    setChapters([]);
+    setSelectedChapters([]);
+    onSelectionComplete([], 0);
+  };
 
   const handleChapterSelect = (selectedIds: number[]) => {
     setSelectedChapters(selectedIds);
@@ -158,7 +170,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
             <SingleSelectDropdown 
               options={levels}
               value={selectedLevel}
-              onChange={(val) => setSelectedLevel(val)}
+              onChange={handleLevelChange}
               placeholder="Select your class..."
               disabled={levels.length === 0}
             />
@@ -169,7 +181,7 @@ export default function SelectionFlow({ onSelectionComplete }: SelectionFlowProp
             <SingleSelectDropdown 
               options={subjects}
               value={selectedSubject}
-              onChange={(val) => setSelectedSubject(val)}
+              onChange={handleSubjectChange}
               placeholder={selectedLevel === '' ? "Please select a Class first..." : "Select your subject..."}
               disabled={selectedLevel === '' || subjects.length === 0}
             />

@@ -2,7 +2,7 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation'; // <-- Import added
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
@@ -13,7 +13,8 @@ export function ThemeToggle() {
   const pathname = usePathname(); 
 
   useEffect(() => {
-    setMounted(true);
+    const frameId = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   // যেসব পেজে থিম টগল বাটন দেখাতে চাও না, সেগুলোর নাম এখানে দাও

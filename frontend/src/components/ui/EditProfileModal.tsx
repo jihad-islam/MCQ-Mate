@@ -55,7 +55,7 @@ export default function EditProfileModal({ isOpen, onClose, currentName, onUpdat
       } else {
         setMessage({ type: 'error', text: 'Failed to update profile.' });
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setLoading(false);

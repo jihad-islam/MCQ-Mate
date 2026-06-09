@@ -16,7 +16,8 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    const frameId = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   const handleSelectionComplete = (chapterIds: number[], mcqs: number) => {

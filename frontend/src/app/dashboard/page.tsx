@@ -12,11 +12,13 @@ export interface UserProfile {
   name: string;
   email: string;
   bkash_number: string;
-  subscription: {
+  subscriptions: Array<{
+    id: number;
+    plan_name: string;
     status: string;
     trx_id: string;
     expiry_date: string | null;
-  };
+  }>;
 }
 
 export default function DashboardPage() {
@@ -50,7 +52,7 @@ export default function DashboardPage() {
           localStorage.removeItem('access_token');
           router.push('/login');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load dashboard. Please check your connection.');
       } finally {
         setLoading(false);

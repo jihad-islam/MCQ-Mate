@@ -51,7 +51,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Invalid credentials. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please check your connection.');
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={handleChange}
                 className={inputClasses}
-                placeholder="rakib@example.com"
+                placeholder="Write your email address"
               />
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/60 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/checkout" className="text-violet-600 dark:text-violet-400 font-bold hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
             Upgrade to Premium
           </Link>

@@ -35,7 +35,7 @@ export default function ResultView({ results, questions, userAnswers }: ResultVi
         } else {
           setIsPremium(false);
         }
-      } catch (e) {
+      } catch {
         setIsPremium(false);
       }
     };

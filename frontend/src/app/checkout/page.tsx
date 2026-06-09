@@ -31,8 +31,9 @@ export default function CheckoutPage() {
           setPlans(data.plans || []);
           setPageSettings(data.settings || null);
         }
-      } catch (err) {
-        console.error('Failed to load page data.');
+      } catch {
+        setPlans([]);
+        setPageSettings(null);
       } finally {
         setPageLoading(false);
       }

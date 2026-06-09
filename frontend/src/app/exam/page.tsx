@@ -25,9 +25,11 @@ function ExamPageContent() {
 
   useEffect(() => {
     // Check if exam was already submitted (survive reloads) ensuring state persistence
-    if (typeof window !== 'undefined' && sessionStorage.getItem('currentExamResult')) {
-      setIsSubmitted(true);
-    }
+    const frameId = window.requestAnimationFrame(() => {
+      if (sessionStorage.getItem('currentExamResult')) {
+        setIsSubmitted(true);
+      }
+    });
 
     // Async function to fetch exam questions from the Django backend
     const loadQuestions = async () => {
@@ -42,19 +44,18 @@ function ExamPageContent() {
         setLoading(true);
         // Pass the string "1,2,3" directly to the updated API function
         const data = await fetchQuestionsByChapter(chapterIds, mcqCount);
-        
-        // Handle varying API responses to gracefully extract the questions list
-        const fetchedQuestions = (data as any)?.results ? (data as any).results : data;
-        setQuestions(Array.isArray(fetchedQuestions) ? fetchedQuestions : []);
-      } catch (err: any) {
+
+        setQuestions(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
         // Log errors to the UI for user visibility
-        setError(err.message || 'Failed to load questions');
+        setError(err instanceof Error ? err.message : 'Failed to load questions');
       } finally {
         setLoading(false); // Stop loading indicator
       }
     };
 
     loadQuestions();
+    return () => window.cancelAnimationFrame(frameId);
   }, [chapterIds, mcqCount]);
 
   // Render a responsive loading state while fetching data

@@ -195,7 +195,7 @@ export async function toggleBookmark(token: string, questionId: number): Promise
   return response.json();
 }
 
-export async function submitFeedback(token: string, payload: { question: number, issue_type: string, message?: string }): Promise<any> {
+export async function submitFeedback(token: string, payload: { question: number, issue_type: string, message?: string }): Promise<{ message?: string }> {
   const response = await fetch(`${API_BASE_URL}/feedback/`, {
     method: 'POST',
     headers: {

@@ -35,10 +35,13 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const savedState = sessionStorage.getItem('showChapterTag');
-    if (savedState === 'true') {
-      setShowChapter(true);
-    }
+    const frameId = window.requestAnimationFrame(() => {
+      const savedState = sessionStorage.getItem('showChapterTag');
+      if (savedState === 'true') {
+        setShowChapter(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   // Close dropdown when clicking outside
@@ -66,8 +69,7 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
       
       setIsBookmarked(!isBookmarked);
       await toggleBookmark(token, question.id);
-    } catch (error) {
-      console.error("Failed to bookmark", error);
+    } catch {
       setIsBookmarked(!isBookmarked);
     }
   };
@@ -94,8 +96,8 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
         setReportSuccess(false);
         setReportMessage('');
       }, 2000);
-    } catch (error) {
-      console.error("Failed to submit report", error);
+    } catch {
+      setReportSuccess(false);
     } finally {
       setIsSubmittingReport(false);
     }
@@ -103,8 +105,7 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
 
   if (!question) return null;
 
-  // Reusable Dropdown Component
-  const OptionsDropdown = () => (
+  const renderOptionsDropdown = () => (
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -157,7 +158,7 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
                   {Object.keys(userAnswers).length} Answered
                 </div>
                 {/* Desktop Dropdown Position */}
-                <OptionsDropdown />
+                {renderOptionsDropdown()}
               </div>
             </div>
             
@@ -175,7 +176,7 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
               MCQ #{currentIndex + 1}
             </span>
             {/* Mobile Dropdown Position - Moved to the extreme right */}
-            <OptionsDropdown />
+            {renderOptionsDropdown()}
           </div>
 
           {/* Question Text & Tags */}

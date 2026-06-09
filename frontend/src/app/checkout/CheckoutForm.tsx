@@ -1,9 +1,9 @@
 'use client';
 
 import { SubscriptionPlan } from '@/lib/api';
-import { CheckCircle2, Hash, Lock, Mail, Phone, ShieldCheck, User, ChevronDown, BookOpen } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronDown, Hash, Lock, Mail, Phone, ShieldCheck, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { checkoutConfig } from './config';
 
 interface CheckoutFormProps {
@@ -109,7 +109,7 @@ export default function CheckoutForm({ plans, adminBkashNumber }: CheckoutFormPr
         const errorMessages = Object.values(data).flat().join(' ');
         setError(errorMessages || 'Something went wrong. Please check your data.');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please check your connection.');
     } finally {
       setLoading(false);
@@ -195,7 +195,7 @@ export default function CheckoutForm({ plans, adminBkashNumber }: CheckoutFormPr
             <div className={inputWrapperClasses}>
               <User className={inputIconClasses} />
               {/* UPDATE: Added autoComplete="off" */}
-              <input type="text" name="first_name" required autoComplete="off" value={formData.first_name} onChange={handleChange} className={inputClasses} placeholder="Rakib Hasan" />
+              <input type="text" name="first_name" required autoComplete="off" value={formData.first_name} onChange={handleChange} className={inputClasses} placeholder="Your Name" />
             </div>
             {formErrors.first_name && <p className="text-rose-500 dark:text-rose-400 text-xs mt-1.5 font-semibold">{formErrors.first_name}</p>}
           </div>
@@ -204,7 +204,7 @@ export default function CheckoutForm({ plans, adminBkashNumber }: CheckoutFormPr
             <div className={inputWrapperClasses}>
               <Mail className={inputIconClasses} />
               {/* UPDATE: Added autoComplete="off" */}
-              <input type="email" name="email" required autoComplete="off" value={formData.email} onChange={handleChange} className={inputClasses} placeholder="rakib@example.com" />
+              <input type="email" name="email" required autoComplete="off" value={formData.email} onChange={handleChange} className={inputClasses} placeholder="name@gmail.com" />
             </div>
             {formErrors.email && <p className="text-rose-500 dark:text-rose-400 text-xs mt-1.5 font-semibold">{formErrors.email}</p>}
           </div>

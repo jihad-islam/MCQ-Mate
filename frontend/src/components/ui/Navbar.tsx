@@ -25,7 +25,7 @@ export default function Navbar() {
             const firstName = userObj.name?.split(' ')[0] || 'Dashboard';
             setUserName(firstName);
           }
-        } catch (e) {
+        } catch {
           setUserName('Dashboard');
         }
       } else {
@@ -34,11 +34,14 @@ export default function Navbar() {
       }
     };
 
-    checkAuthStatus();
+    const frameId = window.requestAnimationFrame(() => {
+      checkAuthStatus();
+      setIsMobileMenuOpen(false);
+    });
     window.addEventListener('auth-change', checkAuthStatus);
-    setIsMobileMenuOpen(false); 
 
     return () => {
+      window.cancelAnimationFrame(frameId);
       window.removeEventListener('auth-change', checkAuthStatus);
     };
   }, [pathname]);
@@ -85,6 +88,12 @@ export default function Navbar() {
                     {userName}
                   </span>
                   <span className="text-sm leading-none ml-0.5">👋</span>
+                </div>
+                <div className="sm:hidden flex min-w-0 items-center gap-1 px-1 animate-in fade-in slide-in-from-left-2 duration-500">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Hi,</span>
+                  <span className="max-w-[7rem] truncate text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                    {userName}
+                  </span>
                 </div>
               </>
             )}
