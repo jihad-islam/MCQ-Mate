@@ -2,10 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Count, Q, Avg, Sum
+from django.db.models import Count, Q, Avg, Sum, Case, When
 from .models import Level, Subject, Chapter, Question, Option, BoardPaper, ExamHistory, Bookmark, QuestionFeedback
 from .serializers import LevelSerializer, SubjectSerializer, ChapterSerializer, QuestionSerializer, ExamHistorySerializer, BookmarkSerializer, QuestionFeedbackSerializer
 import random
+
+
 
 class LevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Level.objects.all()
@@ -37,6 +39,7 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
             })
         return Response(data)
 
+
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
 
@@ -54,41 +57,49 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
                 if not chapter_ids and not board_ids:
                     return queryset.none()
                 
-                sources = []
-                for cid in chapter_ids:
-                    sources.append(list(Question.objects.filter(chapter_id=cid).values_list('pk', flat=True)))
-                for bid in board_ids:
-                    sources.append(list(Question.objects.filter(boards__id=bid).values_list('pk', flat=True)))
+                # ১. প্রথমে সব সিলেক্টেড চ্যাপ্টার এবং বোর্ডের প্রশ্ন ডাটাবেজ থেকে তুলে আনা
+                q_query = Question.objects.none()
+                if chapter_ids:
+                    q_query = q_query | Question.objects.filter(chapter_id__in=chapter_ids)
+                if board_ids:
+                    q_query = q_query | Question.objects.filter(boards__id__in=board_ids)
                     
-                selected_pks = set()
-                remaining_pks_pool = set()
+                questions = list(q_query.distinct())
                 
-                if limit_str:
-                    limit = int(limit_str)
-                    num_sources = len(sources)
-                    base_count = limit // num_sources if num_sources > 0 else 0
+                # ২. Grouping Logic (উদ্দীপক একসাথে রাখা)
+                grouped = {}
+                for q in questions:
+                    # যদি group_id না থাকে, তবে প্রশ্নটিকে নিজেই নিজের একটা আলাদা গ্রুপ ধরবো
+                    gid = q.group_id if q.group_id else f"single_{q.id}"
+                    if gid not in grouped:
+                        grouped[gid] = []
+                    grouped[gid].append(q)
                     
-                    for source_pks in sources:
-                        available = list(set(source_pks) - selected_pks)
-                        if len(available) <= base_count:
-                            selected_pks.update(available)
-                        else:
-                            chosen = random.sample(available, base_count)
-                            selected_pks.update(chosen)
-                            remaining_pks_pool.update(set(available) - set(chosen))
-                            
-                    deficit = limit - len(selected_pks)
-                    if deficit > 0 and remaining_pks_pool:
-                        pool = list(remaining_pks_pool - selected_pks)
-                        if len(pool) <= deficit:
-                            selected_pks.update(pool)
-                        else:
-                            selected_pks.update(random.sample(pool, deficit))
-                            
-                    queryset = Question.objects.filter(pk__in=selected_pks).distinct().order_by('?')
+                # গ্রুপের ভেতরের প্রশ্নগুলোকে ID অনুযায়ী সাজিয়ে রাখা (যাতে উদ্দীপকের ১, ২ পরপর থাকে)
+                for gid in grouped:
+                    grouped[gid].sort(key=lambda x: x.id)
+                    
+                # ৩. Shuffling Logic (গ্রুপগুলোকে শাফেল করা)
+                groups = list(grouped.values())
+                random.shuffle(groups)
+                
+                # ৪. Limit Logic (প্রশ্ন লিমিট করা, তবে উদ্দীপক না ভেঙে)
+                ordered_pks = []
+                limit = int(limit_str) if limit_str else None
+                
+                for g in groups:
+                    if limit and len(ordered_pks) >= limit:
+                        break
+                    # পুরো গ্রুপটাকে একসাথে লিস্টে ঢোকানো
+                    ordered_pks.extend([q.id for q in g])
+                    
+                # ৫. সিরিয়াল মেইনটেইন করে Queryset রিটার্ন করা
+                if ordered_pks:
+                    preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ordered_pks)])
+                    return Question.objects.filter(pk__in=ordered_pks).order_by(preserved_order)
                 else:
-                    all_pks = [pk for source in sources for pk in source]
-                    queryset = Question.objects.filter(pk__in=all_pks).distinct().order_by('?')
+                    return Question.objects.none()
+                    
             except ValueError:
                 pass
         return queryset
