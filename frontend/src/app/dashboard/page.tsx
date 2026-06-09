@@ -85,7 +85,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            {activeTab === 'overview' && <>Welcome back, <span className="text-violet-600 dark:text-violet-400">{profile.name.split(' ')[0]}</span>! 👋</>}
+            {activeTab === 'overview' && <>Hello, <span className="text-violet-600 dark:text-violet-400">{profile.name.split(' ')[0]}</span>! 👋</>}
             {activeTab === 'history' && 'Exam History & Stats'}
             {activeTab === 'bookmarks' && 'Saved Questions'}
           </h1>

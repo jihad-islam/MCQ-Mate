@@ -7,8 +7,6 @@ from .models import Level, Subject, Chapter, Question, Option, BoardPaper, ExamH
 from .serializers import LevelSerializer, SubjectSerializer, ChapterSerializer, QuestionSerializer, ExamHistorySerializer, BookmarkSerializer, QuestionFeedbackSerializer
 import random
 
-
-
 class LevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
@@ -22,21 +20,33 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ChapterSerializer
 
     def list(self, request, *args, **kwargs):
-        chapters = Chapter.objects.filter(is_special_locked=False).annotate(total_mcqs=Count('questions'))
-        boards = BoardPaper.objects.filter(is_special_locked=False).annotate(total_mcqs=Count('questions'))
+        # 1. ইউজারের অ্যাক্টিভ সাবস্ক্রিপশন চেক করা
+        active_levels = []
+        if request.user and request.user.is_authenticated:
+            active_subs = request.user.subscriptions.filter(status='active')
+            active_levels = [sub.plan.level_id for sub in active_subs if sub.plan]
+
+        chapters = Chapter.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions'))
+        boards = BoardPaper.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions'))
 
         data = []
         for c in chapters:
+            # যদি ফ্রি না হয় এবং ইউজারের সাবস্ক্রিপশন না থাকে, তবে লকড
+            is_locked = not c.is_free and c.subject.level_id not in active_levels
             data.append({
                 'id': c.id, 'name': c.name, 'subject': c.subject_id,
-                'total_mcqs': c.total_mcqs, 'is_free': c.is_free, 'is_board': False
+                'total_mcqs': c.total_mcqs, 'is_free': c.is_free, 
+                'is_board': False, 'is_locked': is_locked
             })
+            
         for b in boards:
+            is_locked = not b.is_free and b.subject.level_id not in active_levels
             data.append({
                 'id': b.id + 100000, 'name': f"{b.name} (Board Question)", 
                 'subject': b.subject_id, 'total_mcqs': b.total_mcqs,
-                'is_free': b.is_free, 'is_board': True
+                'is_free': b.is_free, 'is_board': True, 'is_locked': is_locked
             })
+            
         return Response(data)
 
 
@@ -56,44 +66,65 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
                 
                 if not chapter_ids and not board_ids:
                     return queryset.none()
-                
-                # ১. প্রথমে সব সিলেক্টেড চ্যাপ্টার এবং বোর্ডের প্রশ্ন ডাটাবেজ থেকে তুলে আনা
-                q_query = Question.objects.none()
+
+                # ==========================================
+                # NEW: Strict Backend Security Check
+                # ==========================================
+                active_levels = []
+                if self.request.user and self.request.user.is_authenticated:
+                    active_subs = self.request.user.subscriptions.filter(status='active')
+                    active_levels = [sub.plan.level_id for sub in active_subs if sub.plan]
+
+                valid_chapter_ids = []
+                valid_board_ids = []
+
                 if chapter_ids:
-                    q_query = q_query | Question.objects.filter(chapter_id__in=chapter_ids)
+                    chapters = Chapter.objects.filter(id__in=chapter_ids).select_related('subject')
+                    for c in chapters:
+                        if c.is_free or c.subject.level_id in active_levels:
+                            valid_chapter_ids.append(c.id)
+
                 if board_ids:
-                    q_query = q_query | Question.objects.filter(boards__id__in=board_ids)
+                    boards = BoardPaper.objects.filter(id__in=board_ids).select_related('subject')
+                    for b in boards:
+                        if b.is_free or b.subject.level_id in active_levels:
+                            valid_board_ids.append(b.id)
+
+                # যদি সব চ্যাপ্টারই লকড হয়, তবে খালি রিটার্ন করবে
+                if not valid_chapter_ids and not valid_board_ids:
+                    return queryset.none()
+                # ==========================================
+                
+                q_query = Question.objects.none()
+                if valid_chapter_ids:
+                    q_query = q_query | Question.objects.filter(chapter_id__in=valid_chapter_ids)
+                if valid_board_ids:
+                    q_query = q_query | Question.objects.filter(boards__id__in=valid_board_ids)
                     
                 questions = list(q_query.distinct())
                 
-                # ২. Grouping Logic (উদ্দীপক একসাথে রাখা)
+                # Grouping Logic
                 grouped = {}
                 for q in questions:
-                    # যদি group_id না থাকে, তবে প্রশ্নটিকে নিজেই নিজের একটা আলাদা গ্রুপ ধরবো
                     gid = q.group_id if q.group_id else f"single_{q.id}"
                     if gid not in grouped:
                         grouped[gid] = []
                     grouped[gid].append(q)
                     
-                # গ্রুপের ভেতরের প্রশ্নগুলোকে ID অনুযায়ী সাজিয়ে রাখা (যাতে উদ্দীপকের ১, ২ পরপর থাকে)
                 for gid in grouped:
                     grouped[gid].sort(key=lambda x: x.id)
                     
-                # ৩. Shuffling Logic (গ্রুপগুলোকে শাফেল করা)
                 groups = list(grouped.values())
                 random.shuffle(groups)
                 
-                # ৪. Limit Logic (প্রশ্ন লিমিট করা, তবে উদ্দীপক না ভেঙে)
                 ordered_pks = []
                 limit = int(limit_str) if limit_str else None
                 
                 for g in groups:
                     if limit and len(ordered_pks) >= limit:
                         break
-                    # পুরো গ্রুপটাকে একসাথে লিস্টে ঢোকানো
                     ordered_pks.extend([q.id for q in g])
                     
-                # ৫. সিরিয়াল মেইনটেইন করে Queryset রিটার্ন করা
                 if ordered_pks:
                     preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ordered_pks)])
                     return Question.objects.filter(pk__in=ordered_pks).order_by(preserved_order)
@@ -119,7 +150,7 @@ def submit_exam(request):
         correct_count = 0
         wrong_count = 0
         breakdown = []
-        wrong_question_ids = []  # Tracking for history
+        wrong_question_ids = []
         
         for q_id in served_question_ids:
             selected_option_id = answers_dict.get(q_id)
@@ -152,7 +183,6 @@ def submit_exam(request):
         total_questions = len(served_question_ids)
         score = (correct_count / total_questions * 100) if total_questions > 0 else 0
 
-        # UPDATE: Save History only if user is logged in
         if request.user and request.user.is_authenticated:
             ExamHistory.objects.create(
                 user=request.user,
@@ -174,15 +204,11 @@ def submit_exam(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# ==========================================
-# PHASE 4: TRACKING & FEEDBACK API VIEWS
-# ==========================================
-
 class UserExamHistoryView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        histories = ExamHistory.objects.filter(user=request.user).order_by('-created_at')[:10] # Last 10 exams
+        histories = ExamHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
         serializer = ExamHistorySerializer(histories, many=True)
         
         stats = ExamHistory.objects.filter(user=request.user).aggregate(

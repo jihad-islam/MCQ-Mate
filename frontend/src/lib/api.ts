@@ -12,12 +12,15 @@ export interface Subject {
   level: number;
 }
 
+// UPDATE: Added is_board and is_locked based on Phase 4 Backend
 export interface Chapter {
   id: number;
   name: string;
   subject: number;
   total_mcqs: number;
-  is_free: boolean; // Freemium UI এর জন্য নতুন ফিল্ড add করা হলো
+  is_free: boolean;
+  is_board?: boolean;
+  is_locked?: boolean; 
 }
 
 export interface Option {
@@ -70,20 +73,41 @@ export async function fetchSubjectsByLevel(levelId: number): Promise<Subject[]> 
   return subjects.filter((subject: Subject) => subject.level === levelId);
 }
 
+// UPDATE: Sending Authorization token so backend can apply lock logic
 export async function fetchChaptersBySubject(subjectId: number): Promise<Chapter[]> {
-  const response = await fetch(`${API_BASE_URL}/chapters/`, { cache: 'no-store' });
+  const headers: HeadersInit = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  const response = await fetch(`${API_BASE_URL}/chapters/`, { 
+    headers, 
+    cache: 'no-store' 
+  });
+  
   if (!response.ok) throw new Error('Failed to fetch chapters');
   const chapters = await response.json();
   return chapters.filter((chapter: Chapter) => chapter.subject === subjectId);
 }
 
-// UPDATE: Changed chapterId to chapterIds (string) to handle multiple chapters
+// UPDATE: Sending Authorization token for security
 export async function fetchQuestionsByChapter(chapterIds: string, limit?: number): Promise<Question[]> {
+  const headers: HeadersInit = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   const url = limit 
     ? `${API_BASE_URL}/questions/?chapterIds=${chapterIds}&mcqCount=${limit}`
     : `${API_BASE_URL}/questions/?chapterIds=${chapterIds}`;
   
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await fetch(url, { headers, cache: 'no-store' });
   if (!response.ok) throw new Error('Failed to fetch questions');
   
   const data = await response.json();
@@ -140,7 +164,6 @@ export interface BookmarkItem {
   created_at: string;
 }
 
-// History Fetch API
 export async function fetchUserHistory(token: string): Promise<{ stats: ExamHistoryStats, history: ExamHistoryItem[] }> {
   const response = await fetch(`${API_BASE_URL}/history/`, {
     headers: { 'Authorization': `Bearer ${token}` },
@@ -150,7 +173,6 @@ export async function fetchUserHistory(token: string): Promise<{ stats: ExamHist
   return response.json();
 }
 
-// Bookmarks Fetch API
 export async function fetchBookmarks(token: string): Promise<BookmarkItem[]> {
   const response = await fetch(`${API_BASE_URL}/bookmarks/`, {
     headers: { 'Authorization': `Bearer ${token}` },
@@ -160,7 +182,6 @@ export async function fetchBookmarks(token: string): Promise<BookmarkItem[]> {
   return response.json();
 }
 
-// Toggle Bookmark API
 export async function toggleBookmark(token: string, questionId: number): Promise<{ message: string, is_bookmarked: boolean }> {
   const response = await fetch(`${API_BASE_URL}/bookmarks/`, {
     method: 'POST',
@@ -174,7 +195,6 @@ export async function toggleBookmark(token: string, questionId: number): Promise
   return response.json();
 }
 
-// Submit Feedback API
 export async function submitFeedback(token: string, payload: { question: number, issue_type: string, message?: string }): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/feedback/`, {
     method: 'POST',
@@ -185,5 +205,23 @@ export async function submitFeedback(token: string, payload: { question: number,
     body: JSON.stringify(payload)
   });
   if (!response.ok) throw new Error('Failed to submit feedback');
+  return response.json();
+}
+
+// ==========================================
+// SUBSCRIPTION PLANS DYNAMIC FETCH API
+// ==========================================
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  price: string;
+  discounted_price: string | null;
+  features: string[];
+  duration_days: number;
+}
+
+export async function fetchPlans(): Promise<SubscriptionPlan[]> {
+  const response = await fetch(`${API_BASE_URL}/users/plans/`, { cache: 'no-store' });
+  if (!response.ok) throw new Error('Failed to fetch subscription plans');
   return response.json();
 }
