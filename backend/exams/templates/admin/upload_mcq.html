@@ -57,24 +57,24 @@
         
         <p style="background: #e0e7ff; padding: 10px; border-left: 4px solid #6366f1; border-radius: 4px; font-size: 13px;">
             <strong>💡 Pro Tips for Uploading:</strong><br>
-            - <strong>Chapter:</strong> System will auto-read <code>chapter_name</code> from the JSON. If missing, it uses the "Default Chapter" selected above.<br>
-            - <strong>Board:</strong> You can select a Board from the dropdown to apply it to ALL questions in the file, OR include it in the JSON <code>boards</code> array.
+            - <strong>Chapter:</strong> System will auto-read <code>chapter_name</code>. If missing, it uses the "Default Chapter".<br>
+            - <strong>Board:</strong> Select a Board dropdown OR include it in the JSON <code>boards</code> array.<br>
+            - <strong>Linked Questions (উদ্দীপক):</strong> Use the same <code>group_id</code> for questions that share the same passage.
         </p>
         
         <pre style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px;">
 [
   {
-    "text": "$x = \\sqrt{15}$",
+    "text": "প্যাসেজ পড়ে নিচের প্রশ্নটির উত্তর দাও: ...",
     "image_url": "",
     "board_reference": "Dhaka Board 21",
-    "chapter_name": "",
+    "chapter_name": "Chapter 3: Dynamics",
+    "group_id": "passage_101",
     "boards": ["Dhaka Board 2025"],
     "explanation": "Solve for x",
     "options": [
       {"text": "Option A", "is_correct": true},
-      {"text": "Option B", "is_correct": false},
-      {"text": "Option C", "is_correct": false},
-      {"text": "Option D", "is_correct": false}
+      {"text": "Option B", "is_correct": false}
     ]
   }
 ]
@@ -84,14 +84,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const levelSelect = document.getElementById("id_level");
-        const subjectSelect = document.getElementById("id_subject");
-
-        if (levelSelect) {
-            levelSelect.addEventListener("change", function() {
-                // Future AJAX logic can go here to filter subjects based on class/level
-            });
-        }
+        // AJAX logic will go here
     });
 </script>
 {% endblock %}

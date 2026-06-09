@@ -30,6 +30,7 @@ class ChapterAdmin(admin.ModelAdmin):
 @admin.register(BoardPaper)
 class BoardPaperAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
+    list_display_links = ('id', 'name')
     list_filter = ('subject', 'is_free', 'is_special_locked')
     search_fields = ('name',)
 
