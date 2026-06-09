@@ -146,6 +146,7 @@ USE_TZ = True
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'mcq_project' / 'static']
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True
@@ -164,20 +165,98 @@ SIMPLE_JWT = {
 }
 
 JAZZMIN_SETTINGS = {
+    # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": "MCQMate Admin",
-    "site_header": "MCQMate Configuration",
+    
+    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_header": "MCQMate HQ",
+    
+    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_brand": "MCQMate",
-    "welcome_sign": "Welcome back to MCQMate HQ",
-    "search_model": ["exams.Question"],
-    "show_ui_builder": False,
+    
+    # Logo to use for your site, must be present in static files, used for login form logo
+    "site_logo": None, # "images/logo.png" (যদি তোমার লোগো থাকে, এখানে পাথ দিতে পারো)
+    
+    # Welcome text on the login screen
+    "welcome_sign": "Welcome back to MCQMate Admin HQ",
+    
+    # Copyright on the footer
+    "copyright": "MCQMate SaaS",
+    
+    # Top Menu shortcut links
+    "topmenu_links": [
+        {"name": "Dashboard",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        # Upload JSON-এর জন্য টপ মেনুতে ডিরেক্ট বাটন
+        {"name": "Upload MCQs JSON", "url": "admin:exams_question_upload_mcq", "icon": "fas fa-upload"},
+        {"model": "auth.User"},
+    ],
+    
+    # Custom links in the sidebar
     "custom_links": {
         "exams": [{
             "name": "Upload MCQs JSON",
             "url": "admin:exams_question_upload_mcq",
-            "icon": "fas fa-upload",
+            "icon": "fas fa-file-import",
         }]
-    }
+    },
+    
+    # Icons for different models in the sidebar
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "users.CustomUser": "fas fa-user-graduate",
+        
+        # Exams App Icons
+        "exams.Level": "fas fa-layer-group",
+        "exams.Subject": "fas fa-book",
+        "exams.Chapter": "fas fa-bookmark",
+        "exams.BoardPaper": "fas fa-file-alt",
+        "exams.Question": "fas fa-question-circle",
+        "exams.Option": "fas fa-check-square",
+        
+        # History & Feedback
+        "exams.ExamHistory": "fas fa-history",
+        "exams.Bookmark": "fas fa-star",
+        "exams.QuestionFeedback": "fas fa-bug",
+    },
+    
+    "show_ui_builder": False,
+    "custom_css": "css/custom_admin.css",
 }
 
+# JAZZMIN UI TWEAKS: প্রফেশনাল লুকের জন্য থিম কাস্টমাইজেশন
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-white", # টপবার এখন সাদা হবে
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-light-primary", # সাইডবার লাইট মোডে সুন্দর ব্লেন্ড হবে
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "lumen", # ক্লিন এবং সফট লাইট থিম
+    
+    # "dark_mode_theme": "darkly", <-- এই লাইনটি রিমুভ করে দিয়েছি, তাই আর ডার্ক মোড টগল থাকবে না
+    
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
 # Custom User Model configuration
 AUTH_USER_MODEL = 'users.CustomUser'

@@ -11,37 +11,49 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Custom styles for Drag & Drop and Buttons */
+    .drag-drop-zone {
+        border: 2px dashed #6366f1; border-radius: 8px; padding: 30px; text-align: center;
+        background-color: #f8fafc; color: #64748b; cursor: pointer; transition: 0.3s ease;
+    }
+    .drag-drop-zone.dragover { background-color: #e0e7ff; border-color: #4338ca; color: #4338ca; }
+    .action-btn {
+        background: #4f46e5; color: white; padding: 8px 12px; border: none;
+        border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 10px; margin-top: 10px;
+    }
+    .action-btn:hover { background: #4338ca; }
+</style>
+
 <div id="content-main" style="display: flex; gap: 20px; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 300px;">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="upload-form">
             {% csrf_token %}
             <fieldset class="module aligned">
                 <div class="form-row">
-                    {{ form.level.errors }}
                     <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
                     {{ form.level }}
                 </div>
                 <div class="form-row">
-                    {{ form.subject.errors }}
                     <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
                     {{ form.subject }}
                 </div>
                 <div class="form-row">
-                    {{ form.chapter.errors }}
                     <label for="{{ form.chapter.id_for_label }}">{{ form.chapter.label }}:</label>
                     {{ form.chapter }}
                 </div>
-                
                 <div class="form-row">
-                    {{ form.board.errors }}
                     <label for="{{ form.board.id_for_label }}">{{ form.board.label }}:</label>
                     {{ form.board }}
                 </div>
 
                 <div class="form-row">
-                    {{ form.json_file.errors }}
-                    <label for="{{ form.json_file.id_for_label }}" class="required">{{ form.json_file.label }}:</label>
-                    {{ form.json_file }}
+                    <label class="required">{{ form.json_file.label }}:</label>
+                    <!-- Drag and Drop Zone -->
+                    <div id="drop-zone" class="drag-drop-zone">
+                        <p id="file-name-display">Drag & Drop your JSON file here, or click to browse.</p>
+                        <div style="display: none;">{{ form.json_file }}</div>
+                    </div>
                 </div>
             </fieldset>
             
@@ -53,16 +65,13 @@
 
     <div style="flex: 1; min-width: 300px; background: #eef2f5; padding: 20px; border-radius: 8px; border: 1px solid #d1d5db; color: #333;">
         <h3 style="margin-top: 0; color: #000;">Expected JSON Format</h3>
-        <p>The JSON file must be an array of objects. Each object should define a question with its text, optional explanation, and a list of options.</p>
         
         <p style="background: #e0e7ff; padding: 10px; border-left: 4px solid #6366f1; border-radius: 4px; font-size: 13px;">
-            <strong>💡 Pro Tips for Uploading:</strong><br>
-            - <strong>Chapter:</strong> System will auto-read <code>chapter_name</code>. If missing, it uses the "Default Chapter".<br>
-            - <strong>Board:</strong> Select a Board dropdown OR include it in the JSON <code>boards</code> array.<br>
-            - <strong>Linked Questions (উদ্দীপক):</strong> Use the same <code>group_id</code> for questions that share the same passage.
+            <strong>💡 Pro Tips:</strong><br>
+            - <strong>Linked Questions:</strong> Use the same <code>group_id</code> for questions sharing a passage.
         </p>
         
-        <pre style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px;">
+        <pre id="json-template" style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px;">
 [
   {
     "text": "প্যাসেজ পড়ে নিচের প্রশ্নটির উত্তর দাও: ...",
@@ -79,12 +88,102 @@
   }
 ]
         </pre>
+        <button class="action-btn" onclick="copyTemplate()">📋 Copy JSON</button>
+        <button class="action-btn" onclick="downloadTemplate()">⬇️ Download Template</button>
     </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // AJAX logic will go here
+        const levelSelect = document.getElementById("id_level");
+        const subjectSelect = document.getElementById("id_subject");
+        const chapterSelect = document.getElementById("id_chapter");
+        const boardSelect = document.getElementById("id_board");
+        const ajaxUrl = "{% url 'admin:exams_question_ajax_load_options' %}";
+
+        // === 1. AJAX Dependent Dropdowns ===
+        levelSelect.addEventListener("change", function() {
+            const levelId = this.value;
+            subjectSelect.innerHTML = '<option value="">---------</option>';
+            chapterSelect.innerHTML = '<option value="">---------</option>';
+            boardSelect.innerHTML = '<option value="">---------</option>';
+            
+            if (levelId) {
+                fetch(`${ajaxUrl}?level=${levelId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.subjects.forEach(sub => {
+                            subjectSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                        });
+                    });
+            }
+        });
+
+        subjectSelect.addEventListener("change", function() {
+            const subjectId = this.value;
+            chapterSelect.innerHTML = '<option value="">---------</option>';
+            boardSelect.innerHTML = '<option value="">---------</option>';
+            
+            if (subjectId) {
+                fetch(`${ajaxUrl}?subject=${subjectId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.chapters.forEach(chap => {
+                            chapterSelect.innerHTML += `<option value="${chap.id}">${chap.name}</option>`;
+                        });
+                        data.boards.forEach(board => {
+                            boardSelect.innerHTML += `<option value="${board.id}">${board.name}</option>`;
+                        });
+                    });
+            }
+        });
+
+        // === 2. Drag & Drop Logic ===
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("id_json_file");
+        const fileNameDisplay = document.getElementById("file-name-display");
+
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("dragover");
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                fileNameDisplay.innerHTML = `<strong>Selected:</strong> ${fileInput.files[0].name}`;
+            }
+        });
+
+        fileInput.addEventListener("change", function() {
+            if (this.files.length) {
+                fileNameDisplay.innerHTML = `<strong>Selected:</strong> ${this.files[0].name}`;
+            }
+        });
     });
+
+    // === 3. Copy & Download Handlers ===
+    function copyTemplate() {
+        const text = document.getElementById("json-template").innerText;
+        navigator.clipboard.writeText(text).then(() => alert("Template copied to clipboard!"));
+    }
+
+    function downloadTemplate() {
+        const text = document.getElementById("json-template").innerText;
+        const blob = new Blob([text], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "mcq_template.json";
+        link.click();
+    }
 </script>
 {% endblock %}
