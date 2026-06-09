@@ -1,0 +1,76 @@
+/* =========================================================
+   MCQMate Global Admin UI Tweaks (ABSOLUTE FINAL FIX)
+========================================================= */
+
+/* ১. Standard Input Fields */
+input[type="text"]:not(.select2-search__field), 
+input[type="number"], 
+input[type="email"], 
+input[type="password"], 
+textarea {
+    border-radius: 8px !important;
+    border: 1px solid #ced4da !important;
+    padding: 8px 12px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #f8fafc !important;
+    width: 100%;
+    max-width: 800px;
+}
+
+input[type="text"]:not(.select2-search__field):focus, 
+input[type="number"]:focus, 
+textarea:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+    outline: none !important;
+    background-color: #ffffff !important;
+}
+
+/* ==========================================
+   ২. Select2 Autocomplete Boxes (Universal Fix)
+========================================================== */
+/* Force the main container to behave properly and span full width */
+.select2-container {
+    width: 100% !important;
+    max-width: 800px !important;
+    display: block !important;
+    margin-top: 4px;
+}
+
+/* Force the box to appear with borders, regardless of Jazzmin theme */
+.select2-container .select2-selection {
+    border: 1px solid #ced4da !important;
+    border-radius: 8px !important;
+    background-color: #f8fafc !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center;
+}
+
+/* For Multiple Select (Boards Box) - allow tags to wrap */
+.select2-container .select2-selection--multiple {
+    height: auto !important;
+    padding: 4px 8px !important;
+    flex-wrap: wrap !important;
+}
+
+/* Single Select (Chapter Box) specific padding */
+.select2-container .select2-selection--single .select2-selection__rendered {
+    padding-left: 12px !important;
+    line-height: 40px !important;
+}
+
+/* Fix the drop-down menu floating weirdly */
+.select2-dropdown {
+    border: 1px solid #6366f1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    margin-top: 4px !important;
+}
+
+/* ==========================================
+   ৩. Hide CKEditor EOL / Security Warning 
+========================================================== */
+.cke_notifications_area, .cke_notification_warning {
+    display: none !important;
+}

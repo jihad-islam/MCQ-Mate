@@ -1,96 +1,98 @@
 # MCQMate - Project Summary
 
 ## Overview
-MCQMate is a full-stack SaaS application that functions as an MCQ (Multiple Choice Questions) practice partner. It allows users to construct custom exams by selecting a Level (e.g., HSC/SSC), Subject, and specific chapters. Users can set a time limit and a set number of questions. After taking the exam, a review page breaks down the results, offering correct answers and explanations.
 
-## Application State
-Currently, the application includes the following features:
-- **Authentication & Profiles:** User authentication and profile management via the `users` app.
-- **Premium Subscription & Checkout:** Checkout flow for users to get premium access.
-- **User Dashboard:** A comprehensive dashboard (`/dashboard`) allowing users to review their profile, subscription status, Exam History, and Bookmarks.
-- **Exam Configuration:** Users select levels, subjects, and chapters, and specify the question limit and timer.
-- **Dynamic Exam Generation:** Fetches questions for the selected chapters from the backend API.
-- **Exam Interface & Timer:** Questions are displayed alongside a timer, allowing navigation between questions, keyboard shortcuts (via `useExamShortcuts`), and auto-submission when the time runs out.
-- **Review Page:** Shows detailed analytics (correct, wrong, score, explanations).
-- **Exam History & Bookmarks:** Tracks completed exams and allows bookmarking of questions (with explanations) for later review.
-- **PDF Export:** Support for downloading reports or result summaries as PDF.
+MCQMate is a full-stack MCQ practice and exam platform. Students can choose a class level, subject, and one or more chapters, configure the question count and time limit, then take a randomized timed exam. Logged-in users can track exam history, manage bookmarks, report question issues, and access premium-only content based on subscription status.
 
-## Folder structure
+## Current Application State
+
+- Frontend is a Next.js 16 App Router application using React 19, TypeScript, Tailwind CSS 4, next-themes, lucide-react, and KaTeX rendering.
+- Backend is a Django 6 + Django REST Framework API using Simple JWT authentication, Jazzmin admin, PostgreSQL, and WhiteNoise static serving.
+- The homepage is the primary exam setup screen, with responsive class/subject/chapter selection and exam configuration panels.
+- The global navbar supports desktop and mobile layouts, theme toggling, auth-aware links, and a logged-in user greeting on both desktop and mobile.
+- The exam page supports timed exam taking, desktop pagination, mobile stacked questions, keyboard shortcuts, auto-submit, and persisted submitted-result recovery.
+- The result and review flows show score analytics, explanations, answer states, bookmarks, feedback reporting, and PDF-friendly printing.
+- The dashboard provides account details, subscription status, history, bookmarks, and profile editing.
+- Checkout supports multi-plan selection and bKash transaction submission.
+
+## Folder Structure
 
 ```text
 mcq/
-├── backend/                  # Django Backend
-│   ├── exams/                # Core Django App containing Models, Views, APIs
-│   │   ├── management/commands/import_mcqs.py # Script for importing questions
-│   │   ├── migrations/       # Database migrations
-│   │   ├── models.py         # Defines Question, Option, Chapter, Subject, Level, History, Bookmarks DB schema
-│   │   ├── serializers.py    # DRF JSON transformers
-│   │   ├── urls.py           # API routing
-│   │   ├── views.py          # Viewsets and custom actions (submit-exam, history, bookmarks)
-│   ├── users/                # New User App for Authentication & Profiles
-│   │   ├── models.py         # Custom user model
-│   │   ├── views.py          # Auth and profile APIs
-│   ├── staticfiles/          # Collected static assets
-│   ├── mcq_project/          # Main Django configurations (settings, wsgi, asgi)
-│   ├── .env                  # Environment Variables
-│   ├── build.sh              # Build script for deployment
-│   ├── manage.py             # Django entry point
-│   ├── requirements.txt      # Python dependencies
-├── frontend/                 # Next.js Frontend
-│   ├── public/               # Public assets
-│   ├── src/
-│   │   ├── app/              # App Router Pages
-│   │   │   ├── checkout/     # Checkout and premium subscription flow
-│   │   │   ├── dashboard/    # User dashboard for overview, history, and bookmarks
-│   │   │   ├── exam/page.tsx # Renders `ExamInterface` 
-│   │   │   ├── login/        # Authentication pages
-│   │   │   ├── review/page.tsx # Displays results/reviews after test
-│   │   │   ├── globals.css   # Main CSS & Tailwind imports
-│   │   │   ├── layout.tsx    # Root layout container
-│   │   │   ├── page.tsx      # Entry flow (Level/Subject selection & Config)
-│   │   ├── components/       # Reusable components
-│   │   │   ├── config/       # Configuration flow components
-│   │   │   ├── dashboard/    # Dashboard tabs (Overview, BookmarksTab, ExamHistoryTab)
-│   │   │   ├── exam/         # Components specific to the real-time exam (e.g., Timer, DesktopTimer, MobileTimer, QuestionCard, ExamInterface, ResultView)
-│   │   │   ├── selection/    # Flow components for intro page (SelectionFlow, ExamConfig)
-│   │   │   ├── ui/           # Generic components (PdfDownloadButton, ThemeToggle, MultiSelectDropdown, Navbar, FormattedMathText, EditProfileModal, PremiumModal, etc.)
-│   │   ├── hooks/            
-│   │   │   ├── useExamShortcuts.tsx # Keyboard navigation mapping
-│   │   ├── lib/              
-│   │   │   ├── api.ts        # Fetch wrappers & TypeScript interfaces across the app
-│   ├── package.json          # Node dependencies
-│   ├── tailwind.config.ts    # Tailwind styling config
-│   ├── next.config.ts        # Next.js configurations
+├── backend/
+│   ├── exams/
+│   │   ├── management/commands/import_mcqs.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── users/
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── mcq_project/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── asgi.py
+│   │   └── wsgi.py
+│   ├── manage.py
+│   └── requirements.txt
+├── frontend/
+│   ├── src/app/
+│   │   ├── checkout/
+│   │   ├── dashboard/
+│   │   ├── exam/
+│   │   ├── login/
+│   │   ├── review/
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── src/components/
+│   │   ├── dashboard/
+│   │   ├── exam/
+│   │   ├── selection/
+│   │   └── ui/
+│   ├── src/hooks/useExamShortcuts.tsx
+│   ├── src/lib/api.ts
+│   ├── next.config.ts
+│   ├── package.json
+│   └── tailwind.config.ts
+├── README.md
+└── project_summary.md
 ```
 
-## Key Files Breakdown
+## Key Frontend Files
 
-### 1. `frontend/src/app/page.tsx`
-This is the root page of the application that handles test setup:
-- It maintains the state of selected chapters, number of questions, and exam duration.
-- Renders the primary entry components: `<SelectionFlow>` (for picking classes, subjects, and chapters) and `<ExamConfig>` (for choosing constraints).
-- Contains validation logic ensuring required selections are made before proceeding.
-- Uses `sessionStorage` cleanup before starting a new exam.
-- Navigates the user to `/exam` forwarding the configurations as query search params.
+- `frontend/src/app/page.tsx`: Homepage exam setup container. Holds selected chapters, available MCQ count, requested question count, time limit, validation errors, and navigation to `/exam`.
+- `frontend/src/components/ui/Navbar.tsx`: Auth-aware global navbar with desktop and mobile layouts, theme toggle placement, logged-in greeting, dashboard/logout links, login/checkout links, and mobile dropdown.
+- `frontend/src/components/selection/SelectionFlow.tsx`: Fetches levels, subjects, and chapters. Handles premium-locked chapter clicks and reports selected chapter IDs plus available MCQ totals to the homepage.
+- `frontend/src/components/selection/ExamConfig.tsx`: Captures question count and time limit while showing selected total MCQ availability.
+- `frontend/src/app/exam/page.tsx`: Reads exam query parameters, fetches questions, handles loading/error states, and renders the timer plus exam interface.
+- `frontend/src/components/exam/ExamInterface.tsx`: Manages answers, current question, submit state, persisted result recovery, time-up auto-submit, and keyboard shortcuts.
+- `frontend/src/components/exam/QuestionCard.tsx`: Renders questions, options, images, board/chapter labels, bookmark actions, and feedback reporting.
+- `frontend/src/components/exam/ResultView.tsx`: Displays score analytics and gates detailed review behind premium access.
+- `frontend/src/app/review/page.tsx`: Shows answer review, explanations, bookmark/report actions, and print/PDF-friendly content.
+- `frontend/src/app/dashboard/page.tsx`: Fetches the authenticated profile and coordinates dashboard overview, history, and bookmark tabs.
+- `frontend/src/lib/api.ts`: Central API client and shared frontend TypeScript interfaces.
 
-### 2. `frontend/src/lib/api.ts`
-Acts as the bridge between Next.js and the Django backend API:
-- **Interfaces:** Centralizes types defining endpoints.
-- **API Call Functions:** Includes wrappers for levels, subjects, chapters, questions fetching.
-- **Tracking & Feedback Endpoints:** `submitExam` computes answers and submits to history. Includes `fetchUserHistory`, `fetchBookmarks`, and `toggleBookmark`.
-- Adds Bearer Token headers from `localStorage` where required.
+## Key Backend Areas
 
-### 3. `frontend/src/components/dashboard/`
-Handles user profile tracking. Includes:
-- `DashboardOverview.tsx`: Views and edits user info (name, email) and displays mock active subscription statuses.
-- `BookmarksTab.tsx`: Previews saved questions along with their dynamically revealed right answers + explanations.
-- `ExamHistoryTab.tsx`: Maps previous `ExamHistory` records.
+- `backend/exams/models.py`: Level, subject, chapter, board paper, question, option, exam history, bookmarks, and question feedback models.
+- `backend/exams/views.py`: API endpoints for content fetching, exam submission, history, bookmarks, and feedback.
+- `backend/exams/services.py`: Shared exam/domain service logic.
+- `backend/users/models.py`: Custom user and subscription-related models.
+- `backend/users/views.py`: Authentication, profile, subscription plan, checkout, and checkout settings endpoints.
+- `backend/mcq_project/settings.py`: Production-oriented Django settings for JWT auth, PostgreSQL, CORS, WhiteNoise, HTTPS security flags, and Jazzmin admin.
 
-### 4. `frontend/src/components/exam/ExamInterface.tsx`
-The primary controller for the actual exam instance:
-- Orchestrates the timer, question rendering (`QuestionCard`), controls (`ExamControls`), and overall UI states.
-- Interacts closely with `frontend/src/hooks/useExamShortcuts.tsx` for hotkeys.
-- Submits completed answers using `api.ts`. Includes authentication token allowing completion data to be logged to their user history.
+## Production Readiness Notes
 
-### 5. `backend/exams/views.py` (Backend API equivalent)
-Contains the viewsets that provide data for components and validates the submission format receiving answers and generating dynamic performance metrics securely server-side. Additionally generates User History and Bookmark toggling APIs.
+- Frontend lint passes with `npm run lint`.
+- Frontend production build passes with `npm run build`.
+- Next.js external image support is configured for `i.ibb.co`.
+- Client-only browser storage reads are guarded through client effects to reduce hydration risk.
+- Unused default Next.js public SVG assets have been removed.
+- User-facing errors remain in UI state; redundant production console logging has been removed from the touched frontend paths.

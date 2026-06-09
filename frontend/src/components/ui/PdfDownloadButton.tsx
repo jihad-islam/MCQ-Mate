@@ -7,7 +7,7 @@ interface PdfDownloadButtonProps {
   fileName?: string;
 }
 
-export default function PdfDownloadButton({ targetId, fileName }: PdfDownloadButtonProps) {
+export default function PdfDownloadButton({ targetId }: PdfDownloadButtonProps) {
   const handleDownload = () => {
     // একটি টেম্পোরারি <style> ট্যাগ তৈরি করে পেজে ইনজেক্ট করা হচ্ছে
     // এটি নিশ্চিত করবে যে PDF-এ শুধুমাত্র আমাদের টার্গেট করা কন্টেন্টটিই আসবে

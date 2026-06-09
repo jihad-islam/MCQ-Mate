@@ -4,6 +4,7 @@ import { FormattedMathText } from '@/components/ui/FormattedMathText';
 import PdfDownloadButton from '@/components/ui/PdfDownloadButton';
 import { Question, submitFeedback, toggleBookmark } from '@/lib/api';
 import { AlertTriangle, ArrowLeft, Bookmark, CheckCircle, Home, Info, X, XCircle } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -30,16 +31,19 @@ export default function ReviewPage() {
   const [reportSuccess, setReportSuccess] = useState(false);
 
   useEffect(() => {
-    const savedData = sessionStorage.getItem('examReview');
-    if (!savedData) {
-      router.push('/');
-      return;
-    }
-    try {
-      setData(JSON.parse(savedData));
-    } catch (e) {
-      router.push('/');
-    }
+    const frameId = window.requestAnimationFrame(() => {
+      const savedData = sessionStorage.getItem('examReview');
+      if (!savedData) {
+        router.push('/');
+        return;
+      }
+      try {
+        setData(JSON.parse(savedData));
+      } catch {
+        router.push('/');
+      }
+    });
+    return () => window.cancelAnimationFrame(frameId);
   }, [router]);
 
   const handleToggleBookmark = async (questionId: number) => {
@@ -55,8 +59,7 @@ export default function ReviewPage() {
       });
 
       await toggleBookmark(token, questionId);
-    } catch (error) {
-      console.error("Failed to bookmark", error);
+    } catch {
       // Revert optimistic update on error
       setBookmarkedQuestions(prev => {
         const newSet = new Set(prev);
@@ -87,8 +90,8 @@ export default function ReviewPage() {
         setReportMessage('');
         setReportIssueType('wrong_option');
       }, 2000);
-    } catch (error) {
-      console.error("Failed to submit report", error);
+    } catch {
+      setReportSuccess(false);
     } finally {
       setIsSubmittingReport(false);
     }
@@ -175,9 +178,12 @@ export default function ReviewPage() {
                       </p>
                       {question?.image_url && (
                         <div className="mt-4 mb-2">
-                          <img 
+                          <Image
                             src={question.image_url} 
                             alt="Question visual" 
+                            width={600}
+                            height={350}
+                            style={{ objectFit: 'contain' }}
                             className="max-w-full max-h-[300px] object-contain rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
                           />
                         </div>

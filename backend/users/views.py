@@ -1,11 +1,35 @@
-# backend/users/views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import CheckoutSerializer, UserProfileUpdateSerializer
+from .models import SubscriptionPlan, CheckoutSettings
+from .serializers import CheckoutSerializer, UserProfileUpdateSerializer, SubscriptionPlanSerializer, SubscriptionSerializer, CheckoutSettingsSerializer
+
+class SubscriptionPlanListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # ফ্রন্টএন্ড শুধু অ্যাক্টিভ প্ল্যানগুলোই দেখতে পাবে
+        plans = SubscriptionPlan.objects.filter(is_active=True)
+        serializer = SubscriptionPlanSerializer(plans, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CheckoutPageDataView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        settings = CheckoutSettings.objects.first()
+        plans = SubscriptionPlan.objects.filter(is_active=True)
+        
+        settings_data = CheckoutSettingsSerializer(settings).data if settings else None
+        plans_data = SubscriptionPlanSerializer(plans, many=True).data
+        
+        return Response({
+            "settings": settings_data,
+            "plans": plans_data
+        }, status=status.HTTP_200_OK)
 
 class CheckoutView(APIView):
     permission_classes = [AllowAny]
@@ -15,7 +39,7 @@ class CheckoutView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                {"message": "Account created successfully. Subscription is pending approval."}, 
+                {"message": "Account created and course subscriptions are pending approval."}, 
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -32,10 +56,10 @@ class LoginView(APIView):
         if user is not None:
             refresh = RefreshToken.for_user(user)
             
-            try:
-                sub_status = user.subscription.status
-            except:
-                sub_status = "pending"
+            # ইউজারের সব সাবস্ক্রিপশনের স্ট্যাটাস চেক করা
+            subs = user.subscriptions.all()
+            has_active = any(sub.status == 'active' for sub in subs)
+            overall_status = "active" if has_active else "pending" if subs.exists() else "none"
 
             return Response({
                 'refresh': str(refresh),
@@ -45,9 +69,7 @@ class LoginView(APIView):
                     'email': user.email,
                     'name': user.first_name,
                     'is_staff': user.is_staff,
-                    'subscription': {
-                        'status': sub_status
-                    }
+                    'subscription_status': overall_status
                 }
             }, status=status.HTTP_200_OK)
         else:
@@ -59,34 +81,20 @@ class LoginView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    # ইউজারের ডেটা দেখার জন্য (GET)
     def get(self, request):
         user = request.user
-        
-        try:
-            subscription = user.subscription
-            sub_data = {
-                "status": subscription.status,
-                "trx_id": subscription.trx_id,
-                "expiry_date": subscription.expiry_date
-            }
-        except:
-            sub_data = {
-                "status": "pending",
-                "trx_id": "N/A",
-                "expiry_date": None
-            }
+        subscriptions = user.subscriptions.all()
+        subs_data = SubscriptionSerializer(subscriptions, many=True).data
 
         data = {
             "name": user.first_name,
             "email": user.email,
             "bkash_number": user.bkash_number,
-            "subscription": sub_data
+            "subscriptions": subs_data # এখন এটি একটি Array রিটার্ন করবে
         }
         
         return Response(data, status=status.HTTP_200_OK)
 
-    # ইউজারের ডেটা আপডেট করার জন্য (PUT)
     def put(self, request):
         serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():

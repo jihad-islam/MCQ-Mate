@@ -31,7 +31,6 @@ const config = {
     },
   },
   plugins: [],
-  // @ts-ignore
   safelist: [
     'dark',
     'dark:bg-slate-900',

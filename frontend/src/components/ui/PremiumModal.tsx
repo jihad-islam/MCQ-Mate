@@ -22,7 +22,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
           </div>
           <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Unlock Premium</h3>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            You've reached a premium chapter! Upgrade to unlock all chapters, unlimited exams, and detailed analytics.
+            You&apos;ve reached a premium chapter! Upgrade to unlock all chapters, unlimited exams, and detailed analytics.
           </p>
         </div>
         

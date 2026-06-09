@@ -43,7 +43,7 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
 
   // 2. Load saved results if the exam was already submitted
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const frameId = window.requestAnimationFrame(() => {
       try {
         const savedResult = sessionStorage.getItem('currentExamResult');
         if (savedResult) {
@@ -51,8 +51,9 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
           setSubmitted(true);
           if (onSubmitComplete) onSubmitComplete();
         }
-      } catch (e) {}
-    }
+      } catch {}
+    });
+    return () => window.cancelAnimationFrame(frameId);
   }, [onSubmitComplete]);
 
   // 3. Handle Exam Submission Logic
@@ -74,7 +75,7 @@ export default function ExamInterface({ questions, onSubmitComplete }: ExamInter
       sessionStorage.setItem('currentExamResult', JSON.stringify(backendResults));
       
       if (onSubmitComplete) onSubmitComplete();
-    } catch (err) {
+    } catch {
       setError('Failed to submit exam. Please try again.');
     } finally {
       setIsLoading(false);
