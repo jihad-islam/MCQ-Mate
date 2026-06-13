@@ -1,11 +1,22 @@
 'use client';
 
-import { Question, submitFeedback, toggleBookmark } from '@/lib/api';
-import { AlertTriangle, Bookmark, Eye, EyeOff, Info, X } from 'lucide-react';
+import { Question, toggleBookmark } from '@/lib/api';
+import { Bookmark, Eye, EyeOff, Info } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { FormattedMathText } from '../ui/FormattedMathText';
+import ReportModal from './ReportModal'; // UPDATE: Modular Import
+
+// UPDATE: Improved Helper to Strip CKEditor tags & Entities (&nbsp;)
+const cleanHTML = (html: string) => {
+  if (!html) return '';
+  return html
+    .replace(/<\/?p[^>]*>/gi, '') // Remove <p> tags
+    .replace(/&nbsp;/g, ' ')      // Replace non-breaking space with normal space
+    .replace(/&amp;/g, '&')       // Replace other entities if needed
+    .trim();
+};
 
 interface QuestionCardProps {
   question: Question;
@@ -21,30 +32,20 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
   const isBoardExam = chapterIds.split(',').some(id => parseInt(id.trim()) >= 100000);
 
   const [showChapter, setShowChapter] = useState(false);
-  
-  // States for Bookmark, Report & Dropdown
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  const [reportIssueType, setReportIssueType] = useState('wrong_option');
-  const [reportMessage, setReportMessage] = useState('');
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [reportSuccess, setReportSuccess] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
       const savedState = sessionStorage.getItem('showChapterTag');
-      if (savedState === 'true') {
-        setShowChapter(true);
-      }
+      if (savedState === 'true') setShowChapter(true);
     });
     return () => window.cancelAnimationFrame(frameId);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -62,48 +63,16 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
   };
 
   const handleToggleBookmark = async () => {
-    setIsDropdownOpen(false); // Close dropdown
+    setIsDropdownOpen(false); 
     try {
       const token = localStorage.getItem('access_token');
       if (!token) return;
-      
       setIsBookmarked(!isBookmarked);
       await toggleBookmark(token, question.id);
     } catch {
       setIsBookmarked(!isBookmarked);
     }
   };
-
-  const handleOpenReportModal = () => {
-    setIsDropdownOpen(false); // Close dropdown
-    setIsReportModalOpen(true);
-  };
-
-  const handleReportSubmit = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
-      
-      setIsSubmittingReport(true);
-      await submitFeedback(token, {
-        question: question.id,
-        issue_type: reportIssueType,
-        message: reportMessage
-      });
-      setReportSuccess(true);
-      setTimeout(() => {
-        setIsReportModalOpen(false);
-        setReportSuccess(false);
-        setReportMessage('');
-      }, 2000);
-    } catch {
-      setReportSuccess(false);
-    } finally {
-      setIsSubmittingReport(false);
-    }
-  };
-
-  if (!question) return null;
 
   const renderOptionsDropdown = () => (
     <div className="relative" ref={dropdownRef}>
@@ -114,12 +83,10 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
             ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400' 
             : 'text-violet-600/40 dark:text-violet-400/40 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-400'
         }`}
-        title="More Options"
       >
-        <Info className="w-5 h-5 sm:w-5 sm:h-5" strokeWidth={2.5} />
+        <Info className="w-5 h-5" strokeWidth={2.5} />
       </button>
 
-      {/* Popover Menu */}
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
           <button 
@@ -130,11 +97,10 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
             {isBookmarked ? 'Saved' : 'Save'}
           </button>
           <button 
-            onClick={handleOpenReportModal}
+            onClick={() => { setIsDropdownOpen(false); setIsReportModalOpen(true); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
           >
-            <AlertTriangle className="w-4 h-4" />
-            Report Issue
+            <Info className="w-4 h-4" /> Report Issue
           </button>
         </div>
       )}
@@ -145,23 +111,18 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
     <>
       <div className="bg-transparent md:bg-white dark:bg-transparent md:dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800/60 md:border md:border-slate-200 md:dark:border-slate-700 rounded-none md:rounded-3xl p-4 sm:p-6 md:p-8 shadow-none md:shadow-sm transition-colors min-h-0 flex flex-col relative">
         <div className="mb-6 md:mb-8 flex-shrink-0">
-          
-          {/* DESKTOP ONLY: Header */}
           <div className="hidden md:block">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Question {currentIndex + 1} of {totalQuestions}
               </h3>
-              
               <div className="flex items-center gap-4">
                 <div className="text-sm font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-lg">
                   {Object.keys(userAnswers).length} Answered
                 </div>
-                {/* Desktop Dropdown Position */}
                 {renderOptionsDropdown()}
               </div>
             </div>
-            
             <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 mb-8 overflow-hidden">
               <div 
                 className="bg-violet-600 dark:bg-violet-500 h-full rounded-full transition-all duration-300 ease-out" 
@@ -170,18 +131,16 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
             </div>
           </div>
 
-          {/* MOBILE ONLY: Header */}
           <div className="md:hidden flex items-center justify-between mb-3">
             <span className="text-xs font-black text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/10 px-2.5 py-1.5 rounded-md tracking-wide uppercase">
               MCQ #{currentIndex + 1}
             </span>
-            {/* Mobile Dropdown Position - Moved to the extreme right */}
             {renderOptionsDropdown()}
           </div>
 
-          {/* Question Text & Tags */}
           <div className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-50 leading-relaxed">
-            <FormattedMathText text={question.text || ""} />
+            {/* UPDATE: cleanHTML applied here */}
+            <FormattedMathText text={cleanHTML(question.text || "")} />
             
             {!isBoardExam && question.board_reference && (
               <span className="ml-3 inline-block align-middle text-xs font-semibold text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-700/50 px-2.5 py-1 rounded-md">
@@ -209,7 +168,6 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
             )}
           </div>
 
-          {/* Optimized Image */}
           {question.image_url && (
             <div className="mt-4 md:mt-6 mb-2 flex justify-center sm:justify-start">
               <Image 
@@ -224,7 +182,6 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
           )}
         </div>
 
-        {/* Options */}
         <div className="space-y-3.5 md:space-y-4 flex-grow">
           {(question.options || []).map((option) => (
             <button
@@ -248,71 +205,22 @@ export default function QuestionCard({ question, currentIndex, totalQuestions, u
                     <span className="text-white font-bold text-xs md:text-sm">✓</span>
                   )}
                 </div>
-                <span className="text-base md:text-lg"><FormattedMathText text={option?.text || ""} /></span>
+                {/* UPDATE: cleanHTML applied here */}
+                <span className="text-base md:text-lg">
+                  <FormattedMathText text={cleanHTML(option?.text || "")} />
+                </span>
               </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Report Modal - Clean and Minimal */}
-      {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700">
-            
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-500" /> Report Issue
-              </h3>
-              <button onClick={() => setIsReportModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {reportSuccess ? (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">✓</div>
-                <p className="font-bold text-slate-900 dark:text-white">Report Submitted!</p>
-                <p className="text-sm text-slate-500">Thank you for helping us improve.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Issue Type</label>
-                  <select 
-                    value={reportIssueType}
-                    onChange={(e) => setReportIssueType(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-violet-500 font-medium"
-                  >
-                    <option value="wrong_option">Wrong Options</option>
-                    <option value="typo">Typo or Spelling Error</option>
-                    <option value="unclear">Question is Unclear</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Details (Optional)</label>
-                  <textarea 
-                    value={reportMessage}
-                    onChange={(e) => setReportMessage(e.target.value)}
-                    placeholder="Briefly describe the issue..."
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-violet-500 min-h-[100px] resize-none"
-                  />
-                </div>
-
-                <button 
-                  onClick={handleReportSubmit}
-                  disabled={isSubmittingReport}
-                  className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 mt-2"
-                >
-                  {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* UPDATE: Use Modular Report Modal */}
+      <ReportModal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+        questionId={question.id} 
+      />
     </>
   );
 }

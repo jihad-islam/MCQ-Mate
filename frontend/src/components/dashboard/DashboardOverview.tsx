@@ -34,7 +34,6 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
   const isPending = pendingSubs.length > 0 && !isActive;
   const isNone = profile.subscriptions?.length === 0 || (!isActive && !isPending);
 
-  // Dynamic Styles
   let subBoxStyle = 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700/50';
   let iconStyle = 'text-slate-400';
   let badgeStyle = 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
@@ -55,7 +54,8 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
 
   return (
     <>
-      <div className="w-full bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col transition-shadow hover:shadow-md">
+      {/* UPDATE: Added "relative overflow-hidden" and removed heavy transitions to stop GPU glitches */}
+      <div className="w-full relative overflow-hidden bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-slate-100 dark:border-slate-700/50">
           <div className="flex items-center gap-4">
@@ -77,43 +77,44 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
-          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 transition-colors hover:border-violet-200 dark:hover:border-violet-500/30">
-            <User className="w-5 h-5 text-slate-400 mt-0.5" />
-            <div>
+          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            <User className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">{profile.name}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{profile.name}</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 transition-colors hover:border-violet-200 dark:hover:border-violet-500/30">
-            <Mail className="w-5 h-5 text-slate-400 mt-0.5" />
-            <div className="overflow-hidden w-full">
+          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+            {/* UPDATE: min-w-0 flex-1 is critical here to prevent flexbox tearing */}
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</p>
               <p className="text-sm font-bold text-slate-900 dark:text-white truncate" title={profile.email}>{profile.email}</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 transition-colors hover:border-violet-200 dark:hover:border-violet-500/30">
-            <Phone className="w-5 h-5 text-slate-400 mt-0.5" />
-            <div>
+          <div className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            <Phone className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Registered bKash</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">{profile.bkash_number || 'Not provided'}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{profile.bkash_number || 'Not provided'}</p>
             </div>
           </div>
 
-          <div className={`flex items-start justify-between gap-4 p-5 rounded-2xl border transition-colors ${subBoxStyle}`}>
-            <div className="flex items-start gap-4">
+          <div className={`flex items-start justify-between gap-4 p-5 rounded-2xl border ${subBoxStyle}`}>
+            <div className="flex items-start gap-4 w-full">
               {isActive ? (
-                <ShieldCheck className={`w-5 h-5 mt-0.5 ${iconStyle}`} />
+                <ShieldCheck className={`w-5 h-5 mt-0.5 flex-shrink-0 ${iconStyle}`} />
               ) : isPending ? (
-                <Calendar className={`w-5 h-5 mt-0.5 ${iconStyle}`} />
+                <Calendar className={`w-5 h-5 mt-0.5 flex-shrink-0 ${iconStyle}`} />
               ) : (
-                <ShieldAlert className={`w-5 h-5 mt-0.5 ${iconStyle}`} />
+                <ShieldAlert className={`w-5 h-5 mt-0.5 flex-shrink-0 ${iconStyle}`} />
               )}
               
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Premium Access</p>
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Premium Access</p>
+                <div className="flex flex-col items-start gap-2 w-full">
                   {isActive ? (
                     activeSubs.map(sub => {
                       const expiryText = sub.expiry_date 
@@ -121,25 +122,25 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
                         : 'Lifetime';
                       
                       return (
-                        <span key={sub.id} className={`text-[10px] font-black tracking-wide px-2 py-0.5 rounded-md ${badgeStyle} flex items-center gap-1`}>
-                          <BookOpen className="w-3 h-3" /> {sub.plan_name.toUpperCase()} (Till: {expiryText})
+                        <span key={sub.id} className={`text-[10px] font-black tracking-wide px-2.5 py-1 rounded-md ${badgeStyle} flex items-center gap-1.5 w-fit max-w-full`}>
+                          <BookOpen className="w-3 h-3 flex-shrink-0" /> <span className="truncate">{sub.plan_name.toUpperCase()} (Till: {expiryText})</span>
                         </span>
                       );
                     })
                   ) : (
-                     <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${badgeStyle}`}>
+                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${badgeStyle}`}>
                         {isPending ? 'Pending Approval' : 'None'}
                      </span>
                   )}
                 </div>
-                {isPending && <p className="text-xs font-mono font-medium mt-1.5 text-amber-700 dark:text-amber-400">TrxID: {pendingSubs[0]?.trx_id}</p>}
+                {isPending && <p className="text-xs font-mono font-medium mt-2 text-amber-700 dark:text-amber-400 truncate">TrxID: {pendingSubs[0]?.trx_id}</p>}
               </div>
             </div>
             
             {isNone && (
               <button 
                 onClick={() => router.push('/checkout')} 
-                className="text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg active:scale-95 whitespace-nowrap transition-colors"
+                className="text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg active:scale-95 whitespace-nowrap flex-shrink-0"
               >
                 Upgrade
               </button>
@@ -147,7 +148,6 @@ export default function DashboardOverview({ profile, onProfileUpdate }: Dashboar
           </div>
         </div>
 
-        {/* UPDATE: Minimal Auto-Delete Warning Text */}
         <div className="mt-6 border-t border-slate-100 dark:border-slate-700/50 pt-4 text-center">
           <p className="text-[10px] text-slate-400/60 dark:text-slate-500/60 font-medium tracking-wide">
             Note: Accounts without an active subscription for over 1 year are automatically deleted to maintain database health.

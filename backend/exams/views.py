@@ -1,3 +1,5 @@
+# backend/exams/views.py (FULL CODE)
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,11 +10,11 @@ from .serializers import LevelSerializer, SubjectSerializer, ChapterSerializer, 
 import random
 
 class LevelViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Level.objects.all()
+    queryset = Level.objects.all().order_by('id')
     serializer_class = LevelSerializer
 
 class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Subject.objects.all()
+    queryset = Subject.objects.all().order_by('id')
     serializer_class = SubjectSerializer
 
 class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,19 +22,23 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ChapterSerializer
 
     def list(self, request, *args, **kwargs):
-        # 1. ইউজারের অ্যাক্টিভ সাবস্ক্রিপশন চেক করা
         active_levels = []
         if request.user and request.user.is_authenticated:
-            active_subs = request.user.subscriptions.filter(status='active')
-            active_levels = [sub.plan.level_id for sub in active_subs if sub.plan]
+            try:
+                active_levels = list(request.user.subscriptions.filter(
+                    status='active', 
+                    plan__isnull=False
+                ).values_list('plan__level_id', flat=True))
+            except Exception:
+                active_levels = []
 
-        chapters = Chapter.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions'))
-        boards = BoardPaper.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions'))
+        # UPDATE: Explicit order_by('id') added to ensure serial display
+        chapters = Chapter.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions')).order_by('id')
+        boards = BoardPaper.objects.filter(is_special_locked=False).select_related('subject').annotate(total_mcqs=Count('questions')).order_by('id')
 
         data = []
         for c in chapters:
-            # যদি ফ্রি না হয় এবং ইউজারের সাবস্ক্রিপশন না থাকে, তবে লকড
-            is_locked = not c.is_free and c.subject.level_id not in active_levels
+            is_locked = not c.is_free and c.subject_id and (c.subject.level_id not in active_levels)
             data.append({
                 'id': c.id, 'name': c.name, 'subject': c.subject_id,
                 'total_mcqs': c.total_mcqs, 'is_free': c.is_free, 
@@ -40,7 +46,7 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
             })
             
         for b in boards:
-            is_locked = not b.is_free and b.subject.level_id not in active_levels
+            is_locked = not b.is_free and b.subject_id and (b.subject.level_id not in active_levels)
             data.append({
                 'id': b.id + 100000, 'name': f"{b.name} (Board Question)", 
                 'subject': b.subject_id, 'total_mcqs': b.total_mcqs,
@@ -48,7 +54,6 @@ class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
             })
             
         return Response(data)
-
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuestionSerializer
@@ -67,13 +72,15 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
                 if not chapter_ids and not board_ids:
                     return queryset.none()
 
-                # ==========================================
-                # NEW: Strict Backend Security Check
-                # ==========================================
                 active_levels = []
                 if self.request.user and self.request.user.is_authenticated:
-                    active_subs = self.request.user.subscriptions.filter(status='active')
-                    active_levels = [sub.plan.level_id for sub in active_subs if sub.plan]
+                    try:
+                        active_levels = list(self.request.user.subscriptions.filter(
+                            status='active', 
+                            plan__isnull=False
+                        ).values_list('plan__level_id', flat=True))
+                    except Exception:
+                        pass
 
                 valid_chapter_ids = []
                 valid_board_ids = []
@@ -81,19 +88,17 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
                 if chapter_ids:
                     chapters = Chapter.objects.filter(id__in=chapter_ids).select_related('subject')
                     for c in chapters:
-                        if c.is_free or c.subject.level_id in active_levels:
+                        if c.is_free or (c.subject_id and c.subject.level_id in active_levels):
                             valid_chapter_ids.append(c.id)
 
                 if board_ids:
                     boards = BoardPaper.objects.filter(id__in=board_ids).select_related('subject')
                     for b in boards:
-                        if b.is_free or b.subject.level_id in active_levels:
+                        if b.is_free or (b.subject_id and b.subject.level_id in active_levels):
                             valid_board_ids.append(b.id)
 
-                # যদি সব চ্যাপ্টারই লকড হয়, তবে খালি রিটার্ন করবে
                 if not valid_chapter_ids and not valid_board_ids:
                     return queryset.none()
-                # ==========================================
                 
                 q_query = Question.objects.none()
                 if valid_chapter_ids:
@@ -103,7 +108,6 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
                     
                 questions = list(q_query.distinct())
                 
-                # Grouping Logic
                 grouped = {}
                 for q in questions:
                     gid = q.group_id if q.group_id else f"single_{q.id}"

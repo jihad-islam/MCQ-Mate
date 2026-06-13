@@ -26,7 +26,6 @@ class SubjectAdmin(admin.ModelAdmin):
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
-    # NEW: Bulk Inline Editing-এর জন্য list_editable অ্যাড করা হলো
     list_display_links = ('id', 'name')
     list_editable = ('is_free', 'is_special_locked')
     list_filter = ('subject', 'is_free', 'is_special_locked')
@@ -35,7 +34,6 @@ class ChapterAdmin(admin.ModelAdmin):
 @admin.register(BoardPaper)
 class BoardPaperAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'subject', 'is_free', 'is_special_locked')
-    # NEW: Bulk Inline Editing-এর জন্য list_editable অ্যাড করা হলো
     list_display_links = ('id', 'name')
     list_editable = ('is_free', 'is_special_locked')
     list_filter = ('subject', 'is_free', 'is_special_locked')
@@ -56,23 +54,13 @@ class QuestionAdmin(admin.ModelAdmin):
     list_filter = ('chapter__subject__level', 'chapter__subject', 'chapter', 'boards')
     search_fields = ('text', 'group_id')
     
-    # UPDATE: filter_horizontal বাদ! 
-    # Chapter এবং Boards দুইটার জন্যই মডার্ন Autocomplete (Tag style) ব্যবহার করব।
     autocomplete_fields = ['chapter', 'boards']
     
     inlines = [OptionInline]
     
-    class Media:
-        js = (
-            'https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS_HTML',
-        )
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name in ['text', 'explanation']:
-            formfield.widget.attrs.update({'class': 'ckeditor'})
-        return formfield
+    # ==========================================
+    # UPDATE: CKEditor Configuration Completely Removed!
+    # ==========================================
     
     def get_urls(self):
         urls = super().get_urls()
@@ -112,7 +100,6 @@ class QuestionAdmin(admin.ModelAdmin):
                     if not isinstance(data, list):
                         raise ValueError("JSON must be a list of expected objects.")
 
-                    # Call the modularized function
                     success_count, merged_count = process_mcq_json(data, subject, default_chapter, form_board)
                         
                     self.message_user(
@@ -145,5 +132,4 @@ class OptionAdmin(admin.ModelAdmin):
     list_filter = ('is_correct', 'question__chapter')
     search_fields = ('text', 'question__text')
     
-    # NEW: Option এডিট করার সময় Question সার্চ করার জন্য
     autocomplete_fields = ['question']

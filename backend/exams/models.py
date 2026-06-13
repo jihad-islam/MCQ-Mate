@@ -6,12 +6,18 @@ User = get_user_model()
 class Level(models.Model):
     name = models.CharField(max_length=255)
 
+    class Meta:
+        ordering = ['id'] # NEW: For sequential display
+
     def __str__(self):
         return self.name
 
 class Subject(models.Model):
     name = models.CharField(max_length=255)
     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='subjects')
+
+    class Meta:
+        ordering = ['id'] # NEW: For sequential display
 
     def __str__(self):
         return f"{self.name} - {self.level.name}"
@@ -22,6 +28,9 @@ class Chapter(models.Model):
     is_free = models.BooleanField(default=False)
     is_special_locked = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['id'] # NEW: Ensures chapters load serially in frontend
+
     def __str__(self):
         return self.name
 
@@ -31,6 +40,9 @@ class BoardPaper(models.Model):
     is_free = models.BooleanField(default=False)
     is_special_locked = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['id'] # NEW: Ensures board papers load serially in frontend
+
     def __str__(self):
         return self.name
 
@@ -39,7 +51,6 @@ class Question(models.Model):
     image_url = models.URLField(blank=True, null=True)
     board_reference = models.CharField(max_length=255, blank=True, null=True)
     explanation = models.TextField(blank=True, null=True)
-    # chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions')
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='questions', null=True, blank=True)
     boards = models.ManyToManyField(BoardPaper, related_name='questions', blank=True)
     group_id = models.CharField(max_length=100, blank=True, null=True)
@@ -55,7 +66,6 @@ class Option(models.Model):
     def __str__(self):
         return f"{self.text} {'(Correct)' if self.is_correct else ''}"
 
-
 # ==========================================
 # PHASE 4: TRACKING & FEEDBACK MODELS
 # ==========================================
@@ -66,7 +76,6 @@ class ExamHistory(models.Model):
     total_questions = models.IntegerField()
     correct_answers = models.IntegerField()
     wrong_answers = models.IntegerField()
-    # Lightweight storage for tracking mistakes without overloading DB rows
     wrong_question_ids = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -79,7 +88,7 @@ class Bookmark(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'question') # একজন ইউজার একটি প্রশ্ন একবারই বুকমার্ক করতে পারবে
+        unique_together = ('user', 'question') 
 
     def __str__(self):
         return f"Bookmark by {self.user.first_name}"
