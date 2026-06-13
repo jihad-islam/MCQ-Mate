@@ -23,12 +23,16 @@ export interface UserProfile {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Tab state to act like fast page routing
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'bookmarks'>('overview');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,14 +65,16 @@ export default function DashboardPage() {
     fetchProfile();
   }, [router]);
 
+  if (!mounted) return null;
+
+  
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-violet-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 dark:border-slate-700 border-t-violet-600 dark:border-t-violet-500"></div>
       </div>
     );
   }
-
   if (error || !profile) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
@@ -81,9 +87,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)] space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+    // UPDATE: Removed "animate-in fade-in duration-300" from here to prevent GPU tearing on mobile
+    <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)] space-y-6 sm:space-y-8">
       
-      {/* Dynamic Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -98,7 +104,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Back Button for History and Bookmarks View */}
         {activeTab !== 'overview' && (
           <button
             onClick={() => setActiveTab('overview')}
@@ -109,20 +114,16 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Main Content Area */}
       <div className="w-full">
         {activeTab === 'overview' && (
-          <div className="flex flex-col gap-6 sm:gap-8 animate-in fade-in duration-300">
-            {/* Account Details Component */}
+          // UPDATE: Removed nested animations
+          <div className="flex flex-col gap-6 sm:gap-8">
             <DashboardOverview 
               profile={profile} 
               onProfileUpdate={(newName) => setProfile({ ...profile, name: newName })} 
             />
 
-            {/* Fixed Size Action Boxes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              
-              {/* History Box */}
               <div 
                 onClick={() => setActiveTab('history')}
                 className="group cursor-pointer bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors hover:shadow-md hover:border-violet-300 dark:hover:border-violet-500/50 min-h-[220px]"
@@ -141,7 +142,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Bookmarks Box */}
               <div 
                 onClick={() => setActiveTab('bookmarks')}
                 className="group cursor-pointer bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors hover:shadow-md hover:border-violet-300 dark:hover:border-violet-500/50 min-h-[220px]"
@@ -159,25 +159,23 @@ export default function DashboardPage() {
                   Open Bookmarks <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-
             </div>
           </div>
         )}
 
-        {/* Tab Views with strictly fade-in */}
+        {/* Kept minimal animation only for tab switching */}
         {activeTab === 'history' && (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-200">
             <ExamHistoryTab />
           </div>
         )}
         
         {activeTab === 'bookmarks' && (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in duration-200">
             <BookmarksTab />
           </div>
         )}
       </div>
-      
     </div>
   );
 }
