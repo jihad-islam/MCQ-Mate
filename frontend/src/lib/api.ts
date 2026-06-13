@@ -225,3 +225,33 @@ export async function fetchPlans(): Promise<SubscriptionPlan[]> {
   if (!response.ok) throw new Error('Failed to fetch subscription plans');
   return response.json();
 }
+
+// ==========================================
+// Password Reset APIs
+// ==========================================
+
+export const requestPasswordReset = async (email: string) => {
+  const response = await fetch(`${API_BASE_URL}/users/password-reset/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to send reset email.');
+  }
+  return response.json();
+};
+
+export const confirmPasswordReset = async (data: { uid: string; token: string; new_password: string }) => {
+  const response = await fetch(`${API_BASE_URL}/users/password-reset-confirm/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to reset password. Link may be expired.');
+  }
+  return response.json();
+};

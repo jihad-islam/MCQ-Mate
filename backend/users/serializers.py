@@ -20,7 +20,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
-    # UPDATE: Automatically fetch expiry_date from the associated Plan
     expiry_date = serializers.DateTimeField(source='plan.valid_until', read_only=True)
     
     class Meta:
@@ -68,7 +67,6 @@ class CheckoutSerializer(serializers.Serializer):
                     trx_id=validated_data['trx_id'],
                     sender_number=validated_data['bkash_number'],
                     status='pending',
-                    # UPDATE: expiry_date no longer saved directly on Subscription
                 )
             except SubscriptionPlan.DoesNotExist:
                 continue
@@ -96,3 +94,14 @@ class CheckoutSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckoutSettings
         fields = ['bkash_number', 'page_title', 'page_subtitle', 'benefits']
+
+# ==========================================
+# NEW: Password Reset Serializers
+# ==========================================
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=6)

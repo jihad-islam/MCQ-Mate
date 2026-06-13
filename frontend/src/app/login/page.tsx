@@ -38,15 +38,12 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // BUG FIX: Token-এর নাম backend-এর সাথে ম্যাচ করে access_token রাখা হয়েছে
         localStorage.setItem('access_token', data.access);
         localStorage.setItem('refresh_token', data.refresh);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Global Auth Event Dispatch করা হচ্ছে যাতে Navbar সাথে সাথে আপডেট হয়
         window.dispatchEvent(new Event('auth-change'));
         
-        // Dashboard-এ রিডাইরেক্ট
         router.push('/dashboard');
       } else {
         setError(data.error || 'Invalid credentials. Please try again.');
@@ -101,7 +98,13 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 mb-2">Password</label>
+            {/* UPDATE: Added Forgot Password Link inline with the Password label */}
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400">Password</label>
+              <Link href="/forgot-password" className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             <div className={inputWrapperClasses}>
               <Lock className={inputIconClasses} strokeWidth={2.5} />
               <input
