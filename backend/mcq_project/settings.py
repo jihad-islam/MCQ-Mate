@@ -165,33 +165,17 @@ SIMPLE_JWT = {
 }
 
 JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": "MCQMate Admin",
-    
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_header": "MCQMate HQ",
-    
-    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_brand": "MCQMate",
-    
-    # Logo to use for your site, must be present in static files, used for login form logo
-    "site_logo": None, # "images/logo.png" (যদি তোমার লোগো থাকে, এখানে পাথ দিতে পারো)
-    
-    # Welcome text on the login screen
+    "site_logo": None, 
     "welcome_sign": "Welcome back to MCQMate Admin HQ",
-    
-    # Copyright on the footer
     "copyright": "MCQMate SaaS",
-    
-    # Top Menu shortcut links
     "topmenu_links": [
         {"name": "Dashboard",  "url": "admin:index", "permissions": ["auth.view_user"]},
-        # Upload JSON-এর জন্য টপ মেনুতে ডিরেক্ট বাটন
         {"name": "Upload MCQs JSON", "url": "admin:exams_question_upload_mcq", "icon": "fas fa-upload"},
         {"model": "auth.User"},
     ],
-    
-    # Custom links in the sidebar
     "custom_links": {
         "exams": [{
             "name": "Upload MCQs JSON",
@@ -199,38 +183,30 @@ JAZZMIN_SETTINGS = {
             "icon": "fas fa-file-import",
         }]
     },
-    
-    # Icons for different models in the sidebar
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "users.CustomUser": "fas fa-user-graduate",
-        
-        # Exams App Icons
         "exams.Level": "fas fa-layer-group",
         "exams.Subject": "fas fa-book",
         "exams.Chapter": "fas fa-bookmark",
         "exams.BoardPaper": "fas fa-file-alt",
         "exams.Question": "fas fa-question-circle",
         "exams.Option": "fas fa-check-square",
-        
-        # History & Feedback
         "exams.ExamHistory": "fas fa-history",
         "exams.Bookmark": "fas fa-star",
         "exams.QuestionFeedback": "fas fa-bug",
     },
-    
     "show_ui_builder": False,
     "custom_css": "css/custom_admin.css",
 }
 
-# JAZZMIN UI TWEAKS: প্রফেশনাল লুকের জন্য থিম কাস্টমাইজেশন
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": False,
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-white", # টপবার এখন সাদা হবে
+    "brand_colour": "navbar-white", 
     "accent": "accent-primary",
     "navbar": "navbar-white navbar-light",
     "no_navbar_border": False,
@@ -238,17 +214,14 @@ JAZZMIN_UI_TWEAKS = {
     "layout_boxed": False,
     "footer_fixed": False,
     "sidebar_fixed": True,
-    "sidebar": "sidebar-light-primary", # সাইডবার লাইট মোডে সুন্দর ব্লেন্ড হবে
+    "sidebar": "sidebar-light-primary", 
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
     "sidebar_nav_child_indent": True,
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
-    "theme": "lumen", # ক্লিন এবং সফট লাইট থিম
-    
-    # "dark_mode_theme": "darkly", <-- এই লাইনটি রিমুভ করে দিয়েছি, তাই আর ডার্ক মোড টগল থাকবে না
-    
+    "theme": "lumen", 
     "button_classes": {
         "primary": "btn-primary",
         "secondary": "btn-secondary",
@@ -260,3 +233,16 @@ JAZZMIN_UI_TWEAKS = {
 }
 # Custom User Model configuration
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# ==========================================
+# NEW: Email Configuration for Password Reset
+# ==========================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') # e.g. your-email@gmail.com
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # Google App Password
+
+# Frontend URL for generating reset links (Local or Deployed)
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
