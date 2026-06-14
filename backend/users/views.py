@@ -136,7 +136,8 @@ class PasswordResetRequestView(APIView):
                 send_mail(
                     subject="Password Reset Request - MCQMate",
                     message=f"Hello {user.first_name},\n\nClick the link below to reset your password:\n\n{reset_link}\n\nIf you did not request a password reset, please ignore this email.",
-                    from_email=settings.EMAIL_HOST_USER,
+                    # from_email=settings.EMAIL_HOST_USER,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
