@@ -247,4 +247,4 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # Google App Passwor
 
 # Frontend URL for generating reset links (Local or Deployed)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
-DEFAULT_FROM_EMAIL = 'mohammadjihadislam75@gmail.com'
+DEFAULT_FROM_EMAIL = 'mohammadjihadislam715@gmail.com'
